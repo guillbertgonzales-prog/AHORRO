@@ -436,22 +436,50 @@ let photoDB=null;let photoItems=[];let photoUrls=[];
 function openPhotoDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('alcancia_fotos_v1',1);req.onupgradeneeded=()=>req.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
 function photoStore(mode){return photoDB.transaction('photos',mode).objectStore('photos')}
 function requestPromise(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
-async function refreshPhotos(){photoUrls.forEach(URL.revokeObjectURL);photoUrls=[];photoItems=await requestPromise(photoStore('readonly').getAll());const grid=$('photoGrid');grid.replaceChildren();$('photoCount').textContent=photoItems.length+' imágenes guardadas';const collage=$('collage');collage.replaceChildren();collage.classList.toggle('empty',!photoItems.length);for(const item of photoItems){const url=URL.createObjectURL(item.blob);photoUrls.push(url);const card=document.createElement('div');card.className='photo-card';const img=document.createElement('img');img.src=url;img.alt='Nuestro recuerdo';const del=document.createElement('button');del.textContent='×';del.title='Eliminar foto';del.setAttribute('aria-label','Eliminar foto');del.onclick=async()=>{if(!confirm('¿Eliminar esta foto del collage?'))return;await requestPromise(photoStore('readwrite').delete(item.id));await refreshPhotos()};card.append(img,del);grid.append(card)}const items=photoItems.slice(-24);if(items.length){collage.classList.add('filmstrip');for(let row=0;row<4;row++){const track=document.createElement('div');track.className='film-track';const rotated=items.slice(row*3).concat(items.slice(0,row*3));const repeated=Array.from({length:Math.max(4,Math.ceil(16/items.length))},()=>rotated).flat();repeated.forEach((item,i)=>{const img=document.createElement('img');img.src=photoUrls[photoItems.indexOf(item)];img.alt='Recuerdo '+(i+1);track.append(img)});collage.append(track)}}else{collage.classList.remove('filmstrip')}}
+let filmThumbnailUrls=[];let filmPreparation=Promise.resolve();let introRun=0;
+async function mobileFilmThumbnail(blob){
+ const sourceUrl=URL.createObjectURL(blob);const image=new Image();image.decoding='async';
+ try{
+  image.src=sourceUrl;await image.decode();
+  const scale=Math.min(1,480/Math.max(image.naturalWidth,image.naturalHeight));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const context=canvas.getContext('2d');if(!context)return URL.createObjectURL(blob);
+  context.drawImage(image,0,0,canvas.width,canvas.height);
+  const small=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',.82));
+  canvas.width=canvas.height=1;
+  return URL.createObjectURL(small||blob);
+ }catch{return URL.createObjectURL(blob)}finally{image.src='';URL.revokeObjectURL(sourceUrl)}
+}
+async function refreshPhotos(){const preparation=(async()=>{photoUrls.forEach(URL.revokeObjectURL);photoUrls=[];photoItems=await requestPromise(photoStore('readonly').getAll());
+filmThumbnailUrls.forEach(URL.revokeObjectURL);filmThumbnailUrls=[];
+const smallScreen=matchMedia('(max-width:700px)').matches;
+const thumbnails=new Map();
+if(smallScreen){for(const item of photoItems.slice(-24)){const url=await mobileFilmThumbnail(item.blob);filmThumbnailUrls.push(url);thumbnails.set(item.id,url)}}
+const grid=$('photoGrid');grid.replaceChildren();$('photoCount').textContent=photoItems.length+' imágenes guardadas';const collage=$('collage');collage.replaceChildren();collage.classList.toggle('empty',!photoItems.length);for(const item of photoItems){const url=URL.createObjectURL(item.blob);photoUrls.push(url);const card=document.createElement('div');card.className='photo-card';const img=document.createElement('img');img.loading='lazy';img.decoding='async';img.src=url;img.alt='Nuestro recuerdo';const del=document.createElement('button');del.textContent='×';del.title='Eliminar foto';del.setAttribute('aria-label','Eliminar foto');del.onclick=async()=>{if(!confirm('¿Eliminar esta foto del collage?'))return;await requestPromise(photoStore('readwrite').delete(item.id));await refreshPhotos()};card.append(img,del);grid.append(card)}const items=photoItems.slice(-24);if(items.length){collage.classList.add('filmstrip');for(let row=0;row<4;row++){const track=document.createElement('div');track.className='film-track';const rotated=items.slice(row*3).concat(items.slice(0,row*3));const repeated=smallScreen?Array.from({length:Math.max(8,Math.ceil(innerWidth*1.7/Math.max(110,innerWidth*.19))+2)},(_,i)=>rotated[i%rotated.length]):Array.from({length:Math.max(4,Math.ceil(16/items.length))},()=>rotated).flat();repeated.forEach((item,i)=>{const img=document.createElement('img');img.decoding='async';img.src=thumbnails.get(item.id)||photoUrls[photoItems.indexOf(item)];img.alt='Recuerdo '+(i+1);track.append(img)});collage.append(track)}}else{collage.classList.remove('filmstrip')}})();filmPreparation=preparation;return preparation}
 const phrases=['Nuestro amor es mi lugar favorito ❤️','Cada foto guarda un pedacito de nosotros 💕','Los mejores sueños se cumplen juntos ✨','Tú y yo, creando nuestra historia 💗','Nuestro futuro empieza con pequeños pasos 🐷'];
 let movieTimer=null,movieIndex=0,movieActive=false,musicOn=false,audioCtx=null,musicTimer=null;
 $('customPhrase').value=localStorage.getItem('alcancia_frase')||'';
 $('savePhrase').onclick=()=>{localStorage.setItem('alcancia_frase',$('customPhrase').value.trim());notify('Frase guardada 💌')};
 function stopMovie(){clearTimeout(movieTimer);movieTimer=null;movieActive=false}
-function hideIntro(){stopMovie();stopMusic();$('intro').hidden=true;$('intro').classList.remove('finishing');document.body.style.overflow=''}
-function showIntro(){
+function hideIntro(){introRun++;document.body.classList.remove('intro-mobile-playing');stopMovie();stopMusic();$('intro').hidden=true;$('intro').classList.remove('finishing');document.body.style.overflow=''}
+async function showIntro(){
  if(!window.loveGateUnlocked)return;
+ const run=++introRun;
+ if(matchMedia('(max-width:700px)').matches){
+  await filmPreparation.catch(()=>{});
+  const pictures=[...$('collage').querySelectorAll('.film-track:first-child img')];
+  await Promise.all(pictures.map(img=>img.decode().catch(()=>{})));
+  if(run!==introRun)return;
+  document.body.classList.add('intro-mobile-playing');
+ }
+
  stopMovie();
  // Mostrar siempre la bienvenida antes de entrar, incluso si todavía no hay fotos.
  $('intro').classList.remove('finishing');$('intro').hidden=false;document.body.style.overflow='hidden';
  $('movieFrame').hidden=true;$('collage').hidden=!photoItems.length;
  $('introSubtitle').textContent=localStorage.getItem('alcancia_frase')||(photoItems.length?'Nuestros recuerdos, nuestro amor para siempre 💞':'Bienvenidos a nuestra alcancía de amor 💞');$('introTitle').textContent=settings.introTitle||'Nuestra historia de amor';$('collage').style.setProperty('--speed',settings.introSpeed||1);$('introMusic').hidden=!settings.introMusic;buildSparkles();
  $('movieProgress').style.width='0%';
- const collage=$('collage');collage.querySelectorAll('.film-track').forEach(track=>{track.style.animation='none';void track.offsetWidth;track.style.animation='';});
+ const collage=$('collage');const filmTracks=[...collage.querySelectorAll('.film-track')];filmTracks.forEach(track=>track.style.animation='none');void collage.offsetWidth;filmTracks.forEach(track=>track.style.animation='');
  requestAnimationFrame(()=>{$('movieProgress').style.width='100%'});
  movieActive=true;movieTimer=setTimeout(()=>{$('intro').classList.add('finishing');movieTimer=setTimeout(hideIntro,700)},4300);
 }
@@ -738,23 +766,29 @@ renderWithdrawals();
  const gate = document.getElementById('loveGate');
  const form = document.getElementById('loveGateForm');
  const input = document.getElementById('loveGatePassword');
- const sessionKey = 'alcancia_bienvenida_v1:' + location.pathname;
+ const sessionKey = 'alcancia_bienvenida_v2:' + location.pathname;
+ const duration = 60 * 1000;
  let remembered = false;
- try { remembered = sessionStorage.getItem(sessionKey) === 'abierta'; } catch {}
+ try {
+  const access = JSON.parse(sessionStorage.getItem(sessionKey) || 'null');
+  const now = Date.now();
+  remembered = !!access && Number.isFinite(access.expiresAt) && access.expiresAt > now && access.expiresAt <= now + duration;
+  if (!remembered) sessionStorage.removeItem(sessionKey);
+ } catch {}
  window.loveGateUnlocked = remembered;
- function enter(animateDoor) {
+ function enter(fromPassword) {
   window.loveGateUnlocked = true;
-  try { sessionStorage.setItem(sessionKey, 'abierta'); } catch {}
+  // Only a correct password starts a new minute. Reloading does not extend it.
+  if (fromPassword) {
+   try { sessionStorage.setItem(sessionKey, JSON.stringify({ expiresAt: Date.now() + duration })); } catch {}
+  }
   input.value = '';
   document.getElementById('loveGateError').textContent = '';
   form.querySelectorAll('button[type="submit"],button:not([type])').forEach(button => { button.disabled = true; });
   gate.hidden = true;
-  if (!animateDoor) { if (typeof showIntro === 'function') showIntro(); return; }
-  form.classList.add('gate-success');
-  document.getElementById('gateFloats').classList.add('gate-celebrate');
-  const door = document.getElementById('magicDoorScene');
-  door.hidden = false;
-  setTimeout(() => { door.hidden = true; if (typeof showIntro === 'function') showIntro(); }, 720);
+  document.getElementById('magicDoorScene').hidden = true;
+  // Start the existing photo movie immediately, preserving its mobile preparation.
+  if (typeof showIntro === 'function') showIntro();
  }
  form.addEventListener('submit', event => {
   event.preventDefault();
@@ -884,4 +918,20 @@ body{padding-bottom:100px}
   syncMobileNavigation();
 })();
 </script>
+<style id="mobile-film-performance">
+@media(max-width:700px){
+ .intro{contain:paint}
+ .intro .collage.filmstrip .film-track{animation-name:filmDriftMobile;backface-visibility:hidden;will-change:transform;box-shadow:none}
+ .intro .collage.filmstrip .film-track img{flex-shrink:0}
+ .intro-inner>h2,.intro-inner>p#introSubtitle{animation-name:mobileTitleAppear}
+ .intro.finishing{animation:mobileWelcomeFade .7s ease forwards}
+ body.intro-mobile-playing .wrap{visibility:hidden}
+ body.intro-mobile-playing .wrap *,body.intro-mobile-playing .heart,body.intro-mobile-playing .magic-ambience *{animation-play-state:paused!important}
+ body.intro-mobile-playing .heart,body.intro-mobile-playing .magic-ambience{visibility:hidden}
+ @keyframes filmDriftMobile{from{transform:rotate(var(--tilt)) translate3d(-5%,0,0)}to{transform:rotate(var(--tilt)) translate3d(5%,0,0)}}
+ @keyframes mobileTitleAppear{from{opacity:0;transform:translate3d(0,18px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+ @keyframes mobileWelcomeFade{to{opacity:0}}
+}
+@media(max-width:700px) and (prefers-reduced-motion:reduce){.intro .collage.filmstrip .film-track{animation:none!important;transform:rotate(var(--tilt))}}
+</style>
 </body></html>
