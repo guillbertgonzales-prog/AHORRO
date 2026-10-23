@@ -734,24 +734,41 @@ renderWithdrawals();
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});window.addEventListener('focus',poll);
 })();
 </script><script>
-window.loveGateUnlocked=false;
-document.getElementById('loveGateForm').addEventListener('submit',function(e){
- e.preventDefault();
- if(document.getElementById('loveGatePassword').value==='2229'){
-  window.loveGateUnlocked=true;
-  document.getElementById('loveGateForm').classList.add('gate-success');
+(() => {
+ const gate = document.getElementById('loveGate');
+ const form = document.getElementById('loveGateForm');
+ const input = document.getElementById('loveGatePassword');
+ const sessionKey = 'alcancia_bienvenida_v1:' + location.pathname;
+ let remembered = false;
+ try { remembered = sessionStorage.getItem(sessionKey) === 'abierta'; } catch {}
+ window.loveGateUnlocked = remembered;
+ function enter(animateDoor) {
+  window.loveGateUnlocked = true;
+  try { sessionStorage.setItem(sessionKey, 'abierta'); } catch {}
+  input.value = '';
+  document.getElementById('loveGateError').textContent = '';
+  form.querySelectorAll('button[type="submit"],button:not([type])').forEach(button => { button.disabled = true; });
+  gate.hidden = true;
+  if (!animateDoor) { if (typeof showIntro === 'function') showIntro(); return; }
+  form.classList.add('gate-success');
   document.getElementById('gateFloats').classList.add('gate-celebrate');
-  document.getElementById('loveGatePassword').value='';
-  document.getElementById('loveGate').hidden=true;
-  const magicDoor=document.getElementById('magicDoorScene');magicDoor.hidden=false;
-  setTimeout(()=>{magicDoor.hidden=true;if(typeof showIntro==='function')showIntro();},720);
- }else{
-  const card=document.getElementById('loveGateForm');card.classList.remove('gate-wrong');void card.offsetWidth;card.classList.add('gate-wrong');
-  document.getElementById('loveGateError').textContent='Contraseña incorrecta. Intenta otra vez 💔';
-  document.getElementById('loveGatePassword').value='';
-  document.getElementById('loveGatePassword').focus();
+  const door = document.getElementById('magicDoorScene');
+  door.hidden = false;
+  setTimeout(() => { door.hidden = true; if (typeof showIntro === 'function') showIntro(); }, 720);
  }
-});
+ form.addEventListener('submit', event => {
+  event.preventDefault();
+  if (window.loveGateUnlocked) return;
+  if (input.value === '2229') { enter(true); return; }
+  form.classList.remove('gate-wrong');
+  void form.offsetWidth;
+  form.classList.add('gate-wrong');
+  document.getElementById('loveGateError').textContent = 'Contraseña incorrecta. Intenta otra vez 💔';
+  input.value = '';
+  input.focus();
+ });
+ if (remembered) enter(false);
+})();
 </script><script>
 /* Celebraciones de metas, sin cofre. */
 (function(){
