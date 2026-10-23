@@ -231,7 +231,7 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 <p class="admin-note">Revisa los aportes y elimina solamente los registros equivocados. Esta acción actualiza el total y no se puede deshacer.</p>
 <div id="adminRecordsList" class="admin-records-list"></div>
 </section><section class="admin-pane" data-pane="photos" hidden><h3>📸 Fotografías</h3><p class="admin-note">Agrega o elimina fotos y revisa la presentación de 5 segundos.</p><div class="actions"><button type="button" id="adminManagePhotos">📸 Administrar imágenes</button><button type="button" class="secondary" id="adminPreview">▶ Ver collage</button></div>
-</section><section class="admin-pane" data-pane="jsonbin" hidden><h3>☁️ Conexión directa a JSONBin</h3><p class="admin-note">Configura una Access Key limitada a este Bin. No uses la Master Key. La clave se guarda en este navegador y podría ser vista por quien tenga acceso a él.</p><div class="field"><label for="jbBin">Bin ID</label><input id="jbBin" value="6adaf614ffd5d1605384a827" spellcheck="false"></div><div class="field"><label for="jbKey">JSONBin Access Key</label><input id="jbKey" type="password" autocomplete="off" placeholder="Pega aquí tu Access Key"></div><div class="actions"><button type="button" id="jbConnect">💙 Guardar y conectar</button><button type="button" class="secondary" id="jbDisconnect">Desconectar</button></div><p class="admin-note" id="jbStatus" role="status">Sin conexión. La sincronización se comprueba cada 5 segundos mientras la página está abierta.</p></section><div class="admin-footer"><div class="actions"><button type="button" id="adminSave">💗 Guardar cambios</button><button type="button" class="secondary" id="adminReset">Restaurar apariencia</button></div><p class="admin-note">La conexión JSONBin se configura desde la pestaña ☁️ JSONBin.</p></div></div></div><div class="withdrawal-overlay" id="withdrawalModal" hidden role="dialog" aria-modal="true" aria-labelledby="withdrawalTitle"><div class="withdrawal-dialog"><div class="withdrawal-top"><h2 id="withdrawalTitle">💰 Registrar retiro</h2><button type="button" id="closeWithdrawal" class="secondary" aria-label="Cerrar">✕</button></div><p class="muted">Sullivan y Boo cuidarán el historial de sus ahorros 💙💜</p><form id="withdrawalForm"><div class="field"><label for="withdrawalGoal">Meta</label><select id="withdrawalGoal" required></select></div><p id="withdrawalAvailable" class="withdrawal-available" aria-live="polite"></p><div class="field"><label for="withdrawalPerson">¿Quién realiza el retiro?</label><select id="withdrawalPerson" required></select></div><div class="field"><label for="withdrawalAmount">Monto a retirar (S/)</label><input id="withdrawalAmount" type="number" min="0.01" step="0.01" required></div><div class="field"><label for="withdrawalReason">Motivo del retiro</label><textarea id="withdrawalReason" maxlength="250" required placeholder="¿Para qué utilizarán este dinero?"></textarea></div><div class="actions"><button type="submit">💰 Confirmar retiro</button><button type="button" id="cancelWithdrawal" class="secondary">Cancelar</button></div></form></div></div><div id="toast" role="status"></div>
+</section><section class="admin-pane" data-pane="jsonbin" hidden><h3>☁️ JSONBin integrado</h3><p class="admin-note">La conexión está configurada dentro del archivo HTML. No necesitas introducir el Bin ID ni la Access Key aquí.</p><p class="admin-note" id="jbStatus" role="status">Comprobando conexión…</p></section><div class="admin-footer"><div class="actions"><button type="button" id="adminSave">💗 Guardar cambios</button><button type="button" class="secondary" id="adminReset">Restaurar apariencia</button></div><p class="admin-note">La conexión JSONBin se configura desde la pestaña ☁️ JSONBin.</p></div></div></div><div class="withdrawal-overlay" id="withdrawalModal" hidden role="dialog" aria-modal="true" aria-labelledby="withdrawalTitle"><div class="withdrawal-dialog"><div class="withdrawal-top"><h2 id="withdrawalTitle">💰 Registrar retiro</h2><button type="button" id="closeWithdrawal" class="secondary" aria-label="Cerrar">✕</button></div><p class="muted">Sullivan y Boo cuidarán el historial de sus ahorros 💙💜</p><form id="withdrawalForm"><div class="field"><label for="withdrawalGoal">Meta</label><select id="withdrawalGoal" required></select></div><p id="withdrawalAvailable" class="withdrawal-available" aria-live="polite"></p><div class="field"><label for="withdrawalPerson">¿Quién realiza el retiro?</label><select id="withdrawalPerson" required></select></div><div class="field"><label for="withdrawalAmount">Monto a retirar (S/)</label><input id="withdrawalAmount" type="number" min="0.01" step="0.01" required></div><div class="field"><label for="withdrawalReason">Motivo del retiro</label><textarea id="withdrawalReason" maxlength="250" required placeholder="¿Para qué utilizarán este dinero?"></textarea></div><div class="actions"><button type="submit">💰 Confirmar retiro</button><button type="button" id="cancelWithdrawal" class="secondary">Cancelar</button></div></form></div></div><div id="toast" role="status"></div>
 <section id="savingsCalendar" class="savings-calendar" aria-label="Calendario de ahorros">
  <div class="calendar-top"><div><h2>📅 Calendario de nuestros ahorros 💙💜</h2><p>Los días con corazones son los días en que guardaron dinero.</p></div>
  <div class="calendar-controls"><button type="button" id="calendarPrev" aria-label="Mes anterior">❮</button><span id="calendarMonth" class="calendar-month"></span><button type="button" id="calendarNext" aria-label="Mes siguiente">❯</button></div></div>
@@ -520,10 +520,12 @@ renderWithdrawals();
 
 // JSONBin directo: sin Cloudflare Worker. Access Key guardada localmente.
 (function(){
- const $=id=>document.getElementById(id), STORE='alcancia_jsonbin_direct_v1';
+ const $=id=>document.getElementById(id);
+ const JSONBIN_BIN_ID='6adafd99ac6210605a4b0717';
+ const JSONBIN_ACCESS_KEY='$2a$10$CSkWglOK93OyU1ryekIxPeIWHlkqg.GOq.PLYflucNlaKRQL3HAo2';
  let cfg=null, busy=false, uploading=false, dirty=false, lastRemote='', timer=null;
  const say=(m)=>{$('jbStatus').textContent=m};
- const read=()=>{try{return JSON.parse(localStorage.getItem(STORE))}catch{return null}};
+
  const valid=d=>d&&typeof d==='object'&&Array.isArray(d.entries)&&Array.isArray(d.goals);
  async function request(method,payload){
   const r=await fetch('https://api.jsonbin.io/v3/b/'+encodeURIComponent(cfg.bin),{
@@ -549,24 +551,19 @@ renderWithdrawals();
  function start(){clearInterval(timer);timer=setInterval(poll,5000)}
  const oldPersist=persist;
  persist=function(){oldPersist();if(cfg){dirty=true;upload()}};
- $('jbConnect').addEventListener('click',async()=>{
-  const bin=$('jbBin').value.trim(),key=$('jbKey').value.trim();
-  if(!/^[a-f0-9]{24}$/i.test(bin)||!key){say('Introduce un Bin ID válido y una Access Key.');return}
-  cfg={bin,key};say('Comprobando conexión…');
+ async function connectAutomatically(){
+  if(!/^[a-f0-9]{24}$/i.test(JSONBIN_BIN_ID)||!JSONBIN_ACCESS_KEY||JSONBIN_ACCESS_KEY==='PEGA_AQUI_TU_ACCESS_KEY'){
+   say('⚠️ Configura el Bin ID y la Access Key en el HTML.');return;
+  }
+  cfg={bin:JSONBIN_BIN_ID,key:JSONBIN_ACCESS_KEY};
   try{
    const d=await request('GET');
-   if(valid(d)){
-    if(!confirm('Se encontraron ahorros en JSONBin. ¿Descargarlos y reemplazar los datos de este navegador? Haz una copia antes de continuar.')){cfg=null;say('Cancelado: tus datos locales siguen intactos.');return}
-    lastRemote=JSON.stringify(d);apply(d);
-   }else if(d&&typeof d==='object'&&(Object.keys(d).length===0||(Array.isArray(d.ahorros)&&d.nombre))){
-    if(!confirm('El Bin está vacío o tiene los datos iniciales. ¿Subir los ahorros de ESTE navegador? Comprueba antes que sean los correctos.')){cfg=null;return}
-    await request('PUT',state);lastRemote=JSON.stringify(state);
-   }else throw Error('El contenido del Bin no es compatible con esta alcancía');
-   localStorage.setItem(STORE,JSON.stringify(cfg));dirty=false;start();say('💙 Conectado directamente a JSONBin. Actualización automática cada 5 segundos.');
+   if(valid(d)){lastRemote=JSON.stringify(d);apply(d)}
+   else {cfg=null;say('⚠️ Inicializa el Bin con datos compatibles antes de usarlo.');return}
+   dirty=false;start();say('💙 JSONBin conectado automáticamente.');
   }catch(e){cfg=null;say('⚠️ No se pudo conectar: '+e.message)}
- });
- $('jbDisconnect').addEventListener('click',()=>{cfg=null;clearInterval(timer);localStorage.removeItem(STORE);say('Desconectado. Los ahorros locales se conservan.')});
- const saved=read();if(saved&&saved.bin&&saved.key){cfg=saved;$('jbBin').value=cfg.bin;$('jbKey').value=cfg.key;start();poll()}
+ }
+ connectAutomatically();
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});window.addEventListener('focus',poll);
 })();
 </script></body></html>
