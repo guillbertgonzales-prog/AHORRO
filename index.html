@@ -197,24 +197,6 @@ body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .panel{background:#ffffffdf!important;backdrop-filter:blur(12px)}
 @media(max-width:650px){body::before{background-size:auto 45vh;background-position:center 19%;opacity:.13}body::after{background-size:190px 240px}.panel{background:#fffffff0!important}}
 
-/* Puertas mágicas: una puerta única por cada meta */
-.goals-cards{grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr));gap:20px}
-.goal-card{position:relative;text-align:center;overflow:visible;padding:18px 14px 16px}
-.magic-door{position:relative;display:block;width:min(100%,155px);height:210px;margin:5px auto 16px;padding:0;border:8px solid #6e4a96;border-radius:75px 75px 9px 9px;background:#36224c;cursor:pointer;perspective:700px;box-shadow:0 8px 0 #352247,0 15px 20px #42336640;transition:transform .2s}
-.magic-door:hover{transform:translateY(-4px)}.magic-door:focus-visible{outline:4px solid #18d2d7;outline-offset:5px}
-.magic-door-panel{position:absolute;inset:0;border-radius:65px 65px 3px 3px;background:linear-gradient(115deg,#ffffff55,transparent 45%),var(--door-color,#22bfd0);border:4px solid #ffffff50;transform-origin:left;transition:transform .65s cubic-bezier(.22,.7,.2,1);box-shadow:inset -13px 0 0 #00000020,inset 0 0 0 8px #ffffff25;z-index:2}
-.magic-door-panel:before{content:'✦';position:absolute;top:36px;left:calc(50% - 22px);width:44px;height:65px;border:3px solid #ffffff77;border-radius:40px 40px 4px 4px;color:#fff;font-size:25px;line-height:55px}
-.magic-door-panel:after{content:'';position:absolute;right:13px;top:58%;width:14px;height:14px;border-radius:50%;background:#f6db6d;border:3px solid #9b7434;box-shadow:0 1px 3px #0005}
-.magic-door-inside{position:absolute;inset:0;display:grid;place-items:center;font-size:48px;color:white;background:radial-gradient(circle,#bc88ee,#433064);border-radius:65px 65px 3px 3px}
-.magic-door.open .magic-door-panel{transform:rotateY(-105deg)}
-.magic-door-caption{display:block;margin:0 0 8px;font-size:12px;font-weight:700;color:#63469a}
-.door-detail-overlay{position:fixed;inset:0;z-index:99998;background:#18102dbd;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;backdrop-filter:blur(5px)}
-.door-detail-overlay[hidden]{display:none!important}.door-detail-box{position:relative;background:linear-gradient(145deg,#e6fcff,#f3e7ff);border:4px solid #7c56af;border-radius:24px;padding:26px 20px;max-width:420px;width:100%;box-shadow:0 22px 65px #150e3580;text-align:center;color:#273e64;max-height:90dvh;overflow:auto}
-.door-detail-box h2{margin:4px 35px 12px;font-size:1.5rem}.door-detail-close{position:absolute;right:12px;top:12px;border:0;border-radius:50%;background:#fff;color:#56327e;font-size:25px;width:40px;height:40px;cursor:pointer}
-.door-detail-box .door-detail-track{height:18px;background:white;border-radius:30px;overflow:hidden;margin:15px 0}.door-detail-box .door-detail-fill{height:100%;background:linear-gradient(90deg,#1abdd0,#8b54ce);border-radius:30px}
-.door-detail-box .door-detail-stats{display:grid;gap:9px;margin:14px 0}.door-detail-box .door-detail-stats p{margin:0}.door-detail-box .door-detail-select{width:100%;margin-top:10px}
-@media(prefers-reduced-motion:reduce){.magic-door,.magic-door-panel{transition:none!important}}
-
 /* Premios y celebraciones de cada meta */
 .goal-awards{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}.goal-award{font-size:12px;border-radius:30px;padding:5px 9px;background:#e8e7f8;color:#695b83;border:1px solid #cfc7ed}.goal-award.unlocked{background:#fff1bf;color:#7d4b12;border-color:#f5cc62;font-weight:800;box-shadow:0 2px 8px #ffc64d55}.award-overlay{position:fixed;inset:0;z-index:100000;background:#1b1647b8;display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(6px)}.award-overlay[hidden]{display:none!important}.award-dialog{position:relative;max-width:420px;width:100%;max-height:90dvh;overflow:auto;text-align:center;background:linear-gradient(145deg,#e8fbff,#f4e8ff 65%,#fff5d8);border:5px solid #68cfe2;border-radius:30px;padding:30px 22px;box-shadow:0 25px 80px #160a4d77;animation:award-pop .55s cubic-bezier(.18,1.4,.38,1)}.award-trophy{font-size:75px;filter:drop-shadow(0 8px 7px #b9955577);animation:award-float 1.5s ease-in-out infinite alternate}.award-dialog h2{color:#6041a4;font-size:26px;margin:10px 0}.award-dialog p{color:#36567a;line-height:1.6}.award-dialog button{margin-top:12px;background:linear-gradient(120deg,#22b9cf,#8554cb);color:#fff;border:0;border-radius:20px;padding:14px 24px;font-size:17px;font-weight:800;cursor:pointer}.award-stars{font-size:26px;letter-spacing:10px}@keyframes award-pop{from{opacity:0;transform:scale(.6) rotate(-5deg)}to{opacity:1;transform:scale(1) rotate(0)}}@keyframes award-float{to{transform:translateY(-12px) rotate(5deg)}}
 
@@ -400,7 +382,7 @@ adminTabs.forEach(btn=>btn.addEventListener('click',()=>selectAdminTab(btn.datas
 
 function renderGoalSelect(){const el=$('savingGoalSelect');const chosen=el.value;el.replaceChildren();state.goals.forEach(g=>{const o=document.createElement('option');o.value=g.id;o.textContent=g.name;el.append(o)});el.value=state.goals.some(g=>g.id===chosen)?chosen:state.activeGoalId}
 function chooseGoal(id){if(!state.goals.some(g=>g.id===id))return;state.activeGoalId=id;syncActiveGoal();persist();render();fillAdmin();renderAdminGoals();notify('Meta seleccionada: '+activeGoal().name)}
-function renderGoalsOverview(){const wrap=$('goalsOverview');wrap.replaceChildren();const grid=document.createElement('div');grid.className='goals-cards';state.goals.forEach(g=>{const sum=goalBalance(g.id);const card=document.createElement('div');card.className='goal-card'+(g.id===state.activeGoalId?' active':'');const door=document.createElement('button');door.type='button';door.className='magic-door';door.style.setProperty('--door-color',['#32bfd1','#a16cdb','#f28fb5','#53c9a0','#e3ad56','#638ce2'][state.goals.indexOf(g)%6]);door.setAttribute('aria-label','Abrir puerta de '+g.name);const inside=document.createElement('span');inside.className='magic-door-inside';inside.textContent='💖';const panel=document.createElement('span');panel.className='magic-door-panel';door.append(inside,panel);door.addEventListener('click',()=>{door.classList.add('open');openMagicGoal(g.id)});const hint=document.createElement('small');hint.className='magic-door-caption';hint.textContent='🚪 Toca la puerta para descubrir tu meta';const title=document.createElement('strong');title.textContent='🎯 '+g.name;const amounts=document.createElement('span');amounts.textContent=soles(sum)+' de '+soles(g.amount);const progress=document.createElement('div');progress.className='goal-mini-track';const fill=document.createElement('div');fill.className='goal-mini-fill';fill.style.width=Math.min(100,sum/g.amount*100)+'%';progress.append(fill);const percent=document.createElement('small');percent.textContent=(sum/g.amount*100).toFixed(1)+'% completado';const btn=document.createElement('button');btn.type='button';btn.textContent=g.id===state.activeGoalId?'💜 Meta seleccionada':'💙 Ver esta meta';btn.disabled=g.id===state.activeGoalId;btn.addEventListener('click',()=>chooseGoal(g.id));card.append(door,hint,title,amounts,progress,percent,makeAwardBadges(g.id),btn);grid.append(card)});wrap.append(grid)}
+function renderGoalsOverview(){const wrap=$('goalsOverview');wrap.replaceChildren();const grid=document.createElement('div');grid.className='goals-cards';state.goals.forEach(g=>{const sum=goalBalance(g.id);const card=document.createElement('div');card.className='goal-card'+(g.id===state.activeGoalId?' active':'');const title=document.createElement('strong');title.textContent='🎯 '+g.name;const amounts=document.createElement('span');amounts.textContent=soles(sum)+' de '+soles(g.amount);const progress=document.createElement('div');progress.className='goal-mini-track';const fill=document.createElement('div');fill.className='goal-mini-fill';fill.style.width=Math.min(100,sum/g.amount*100)+'%';progress.append(fill);const percent=document.createElement('small');percent.textContent=(sum/g.amount*100).toFixed(1)+'% completado';const btn=document.createElement('button');btn.type='button';btn.textContent=g.id===state.activeGoalId?'💜 Meta seleccionada':'💙 Ver esta meta';btn.disabled=g.id===state.activeGoalId;btn.addEventListener('click',()=>chooseGoal(g.id));card.append(title,amounts,progress,percent,makeAwardBadges(g.id),btn);grid.append(card)});wrap.append(grid)}
 function renderAdminGoals(){const wrap=$('goalsAdminList');wrap.replaceChildren();state.goals.forEach(g=>{const row=document.createElement('div');row.className='goal-admin-row';const info=document.createElement('div');const strong=document.createElement('strong');strong.textContent=g.name;const small=document.createElement('small');small.textContent=soles(g.amount)+' · '+goalEntries(g.id).length+' aportes';info.append(strong,small);const actions=document.createElement('div');actions.className='goal-actions';const select=document.createElement('button');select.type='button';select.textContent=g.id===state.activeGoalId?'✓ Activa':'Seleccionar';select.disabled=g.id===state.activeGoalId;select.onclick=()=>chooseGoal(g.id);actions.append(select);if(state.goals.length>1){const del=document.createElement('button');del.type='button';del.textContent='🗑️ Eliminar';del.onclick=()=>{const count=goalEntries(g.id).length;if(!confirm('¿Eliminar la meta "'+g.name+'"?'+(count?' Sus '+count+' aportes serán transferidos a otra meta, sin perder dinero.':'')))return;const destination=state.goals.find(x=>x.id!==g.id);state.entries.forEach(e=>{if((e.goalId||'original')===g.id)e.goalId=destination.id});state.withdrawals.forEach(w=>{if(w.goalId===g.id)w.goalId=destination.id});state.goals=state.goals.filter(x=>x.id!==g.id);if(state.activeGoalId===g.id)state.activeGoalId=destination.id;syncActiveGoal();persist();render();fillAdmin();renderAdminGoals();notify('Meta eliminada; ahorros conservados')};actions.append(del)}row.append(info,actions);wrap.append(row)})}
 $('addGoalButton').addEventListener('click',()=>{const name=$('newGoalName').value.trim().slice(0,80),amount=Number($('newGoalAmount').value);if(!name||!Number.isFinite(amount)||amount<=0||amount>100000000)return notify('Escribe el nombre y un monto válido');const id='goal_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);state.goals.push({id,name,amount:Math.round(amount*100)/100});$('newGoalName').value='';$('newGoalAmount').value='';state.activeGoalId=id;syncActiveGoal();persist();render();fillAdmin();renderAdminGoals();notify('¡Nueva meta agregada! 🎯')});
 $('savingGoalSelect').addEventListener('change',e=>chooseGoal(e.target.value));
@@ -465,23 +447,7 @@ document.getElementById('mobileOpenAdmin')?.addEventListener('click',()=>{
 /* Reutiliza la imagen de la cabecera como fondo, sin cargar archivos externos. */
 (function(){function setMonsterBackground(){const image=document.querySelector('.monster-art img');if(image&&image.src){document.body.style.setProperty('--monster-background-image','url("'+image.src+'")')}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',setMonsterBackground)}else{setMonsterBackground()}})();
 
-function openMagicGoal(id){
- const goal=state.goals.find(g=>g.id===id);if(!goal)return;
- const saved=goalBalance(id);
- const pct=goal.amount>0?Math.min(100,saved/goal.amount*100):0;
- const overlay=document.createElement('div');overlay.className='door-detail-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');overlay.setAttribute('aria-label','Detalles de la meta '+goal.name);
- const box=document.createElement('div');box.className='door-detail-box';
- const close=document.createElement('button');close.type='button';close.className='door-detail-close';close.textContent='×';close.setAttribute('aria-label','Cerrar puerta');
- const title=document.createElement('h2');title.textContent='🚪 '+goal.name;
- const subtitle=document.createElement('p');subtitle.textContent=pct>=100?'🎉 ¡Meta cumplida! Sullivan y Boo están felices.':'💙 ¡Cada moneda nos acerca a nuestro sueño!';
- const stats=document.createElement('div');stats.className='door-detail-stats';
- for(const [label,value] of [['💰 Ahorrado: ',soles(saved)],['🎯 Objetivo: ',soles(goal.amount)],['💜 Falta: ',soles(Math.max(0,goal.amount-saved))],['✨ Progreso: ',pct.toFixed(1)+'%'],['🪙 Aportes: ',String(goalEntries(id).length)]]){const p=document.createElement('p');const b=document.createElement('strong');b.textContent=label;p.append(b,document.createTextNode(value));stats.append(p)}
- const track=document.createElement('div');track.className='door-detail-track';const fill=document.createElement('div');fill.className='door-detail-fill';fill.style.width=pct+'%';track.append(fill);
- const choose=document.createElement('button');choose.type='button';choose.className='door-detail-select';choose.textContent=id===state.activeGoalId?'💜 Esta es tu meta actual':'💙 Seleccionar esta meta';
- const dismiss=()=>{document.removeEventListener('keydown',onKey);overlay.remove()};
- const onKey=e=>{if(e.key==='Escape')dismiss()};close.addEventListener('click',dismiss);overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});choose.addEventListener('click',()=>{if(id!==state.activeGoalId)chooseGoal(id);dismiss()});
- box.append(close,title,subtitle,stats,track,makeAwardBadges(id),choose);overlay.append(box);document.body.append(overlay);document.addEventListener('keydown',onKey);close.focus();
-}
+
 
 /* Calendario: utiliza los aportes ya guardados, sin duplicar datos. */
 let calendarVisibleMonth=new Date().getMonth();
@@ -554,18 +520,18 @@ renderWithdrawals();
 
 // Sincronización opcional con JSONBin.io. La clave se conserva solo en este navegador.
 (function(){
- const get=id=>document.getElementById(id), storageKey='alcancia_jsonbin_settings_v1';
+ const get=id=>document.getElementById(id), storageKey='alcancia_worker_settings_v1', WORKER_URL='https://alcancia-amor.guillbert2230.workers.dev/sync';
  let config=null,interval=null,busy=false,dirty=false,uploading=false,lastRemote='';
  const status=(message,error=false)=>{get('cloudStatus').textContent=message;get('cloudStatus').className='cloud-status'+(error?' cloud-danger':'')};
  const readConfig=()=>{try{return JSON.parse(localStorage.getItem(storageKey))}catch{return null}};
- const refreshInputs=()=>{const c=readConfig()||{};get('cloudBin').value=c.bin||'';get('cloudKey').value=c.key||''};
+ const refreshInputs=()=>{const c=readConfig()||{};get('cloudBin').value='6adaf614ffd5d1605384a827';get('cloudKey').value=c.key||''};
  const request=async(method,payload)=>{
-  const response=await fetch('https://api.jsonbin.io/v3/b/'+encodeURIComponent(config.bin)+(method==='GET'?'/latest':''),{
-   method,headers:{'X-Access-Key':config.key,'Content-Type':'application/json','X-Bin-Versioning':'false'},...(method==='PUT'?{body:JSON.stringify(payload)}:{})
+  const response=await fetch(WORKER_URL,{
+   method,headers:{'X-Alcancia-Pin':config.key,'Content-Type':'application/json'},...(method==='PUT'?{body:JSON.stringify(payload)}:{})
   });
   const data=await response.json().catch(()=>null);
-  if(!response.ok)throw Error((data&&data.message)||'Error HTTP '+response.status);
-  return data?.record;
+  if(!response.ok)throw Error((data&&(data.error||data.message))||'Error HTTP '+response.status);
+  return data?.data;
  };
  const valid=data=>data&&typeof data==='object'&&Array.isArray(data.entries)&&Array.isArray(data.goals);
  const applyRemote=data=>{if(!valid(data))throw Error('El Bin no contiene datos de alcancía válidos');state=data;localStorage.setItem(KEY,JSON.stringify(state));syncActiveGoal();render();if(typeof renderCalendar==='function')renderCalendar();if(typeof renderAdminRecords==='function')renderAdminRecords()};
@@ -573,29 +539,29 @@ renderWithdrawals();
  const poll=async()=>{if(!config||busy||uploading||dirty||document.hidden)return;busy=true;try{const data=await request('GET');if(!valid(data))throw Error('Datos de alcancía no válidos');const incoming=JSON.stringify(data);if(incoming!==lastRemote){lastRemote=incoming;applyRemote(data)}status('💙 Conectado. Última comprobación correcta.')}catch(e){status('⚠️ No se pudo comprobar JSONBin: '+e.message,true)}finally{busy=false}};
  const start=()=>{clearInterval(interval);interval=setInterval(poll,5000)};
  const connect=async()=>{
-  const bin=get('cloudBin').value.trim(),key=get('cloudKey').value.trim();
-  if(!/^[a-f0-9]{24}$/i.test(bin)||!key){status('Introduce un Bin ID válido y una Access Key.',true);return}
+  const bin=get('cloudBin').value.trim()||'6adaf614ffd5d1605384a827',key=get('cloudKey').value.trim();
+  if(!key){status('Introduce el código compartido de la alcancía.',true);return}if(WORKER_URL.includes('PEGA_AQUI')){status('Primero configura la URL de Cloudflare Worker en index.html.',true);return}
   config={bin,key};status('Comprobando conexión…');
   try{
    const data=await request('GET');
    if(valid(data)){
     if(!confirm('Se encontraron datos compartidos. ¿Descargarlos y reemplazar los datos de este navegador?')){config=null;status('Conexión cancelada; tus datos locales siguen intactos.');return}
     lastRemote=JSON.stringify(data);applyRemote(data);
-   }else if(data&&Object.keys(data).length===0){
-    if(!confirm('Este Bin está vacío. ¿Subir los datos de este celular como alcancía inicial?')){config=null;return}
+   }else if(data&&typeof data==='object'&&!Array.isArray(data)&&!Array.isArray(data.entries)&&!Array.isArray(data.goals)&&(Object.keys(data).length===0||(Array.isArray(data.ahorros)&&data.nombre))){
+    if(!confirm('El Bin todavía no contiene datos compatibles de la alcancía. ¿Subir los datos de ESTE celular como alcancía inicial? Antes guarda una copia de tus ahorros actuales.')){config=null;return}
     await request('PUT',state);lastRemote=JSON.stringify(state);
    }else throw Error('El Bin contiene otro tipo de datos. Crea un Bin nuevo con {} como contenido inicial.');
-   localStorage.setItem(storageKey,JSON.stringify(config));dirty=false;start();status('💙 Conectado a JSONBin. Se revisan cambios cada 5 segundos.');
+   localStorage.setItem(storageKey,JSON.stringify(config));dirty=false;start();status('💙 Conectado a JSONBin mediante Cloudflare. Se revisan cambios cada 5 segundos.');
   }catch(e){config=null;status('No se pudo conectar: '+e.message,true)}
  };
  const previousPersist=persist;
  persist=function(){previousPersist();if(!config)return;dirty=true;upload()};
- get('cloudLaunch').onclick=()=>{refreshInputs();get('cloudPanel').hidden=false;status(config?'💙 Conectado a JSONBin.':'Introduce tu Bin ID y Access Key.')};
+ get('cloudLaunch').onclick=()=>{refreshInputs();get('cloudPanel').hidden=false;status(config?'💙 Conectado a JSONBin.':'Introduce el código compartido de la alcancía.')};
  get('cloudClose').onclick=()=>get('cloudPanel').hidden=true;
  get('cloudPanel').onclick=e=>{if(e.target===get('cloudPanel'))get('cloudPanel').hidden=true};
  get('cloudConnect').onclick=connect;
  get('cloudDisconnect').onclick=()=>{config=null;clearInterval(interval);interval=null;localStorage.removeItem(storageKey);status('Desconectado. Los datos de este celular se conservan.')};
- const saved=readConfig();if(saved&&saved.bin&&saved.key){config=saved;start();poll()}
+ const saved=readConfig();if(saved&&saved.bin==='6adaf614ffd5d1605384a827'&&saved.key){config=saved;start();poll()}
 })();
 </script><button type="button" class="cloud-launch" id="cloudLaunch">☁️ Sincronizar</button>
-<div class="cloud-panel" id="cloudPanel" hidden role="dialog" aria-modal="true" aria-label="Sincronizar celulares con JSONBin"><div class="cloud-card"><h2>☁️ Alcancía compartida con JSONBin</h2><p>Utiliza el mismo <b>Bin ID</b> y <b>Access Key</b> en ambos celulares. Primero crea un Bin privado en <a href="https://jsonbin.io" target="_blank" rel="noopener noreferrer">JSONBin.io</a> con el contenido <code>{}</code>.</p><label for="cloudBin">Bin ID</label><input id="cloudBin" placeholder="Ej.: 6700abc123... (24 caracteres)" autocomplete="off"><label for="cloudKey">Access Key de JSONBin</label><input id="cloudKey" type="password" placeholder="Clave con permisos de lectura y escritura" autocomplete="off"><p class="cloud-status">⚠️ Esta versión conecta directamente con JSONBin: la clave queda guardada en el navegador de cada celular y puede ser accesible a quien use ese dispositivo. No publiques una página HTML que contenga la clave. Para mayor seguridad, usa un servidor intermediario. No se recomienda para datos sensibles.</p><p class="cloud-status">Al conectar, podrás descargar los datos existentes o iniciar un Bin vacío. La sincronización revisa cambios cada 5 segundos; los cambios simultáneos pueden sobrescribirse.</p><div><button id="cloudConnect" type="button">💙 Conectar JSONBin</button> <button id="cloudDisconnect" type="button" class="secondary">Desconectar</button> <button id="cloudClose" type="button" class="secondary">Cerrar</button></div><p id="cloudStatus" class="cloud-status" role="status"></p></div></div></body></html>
+<div class="cloud-panel" id="cloudPanel" hidden role="dialog" aria-modal="true" aria-label="Sincronizar celulares con JSONBin"><div class="cloud-card"><h2>☁️ Alcancía compartida con JSONBin</h2><p>Usa el mismo código compartido en los dos celulares. La clave de JSONBin está protegida en Cloudflare Worker.</p><input id="cloudBin" type="hidden" value="6adaf614ffd5d1605384a827"><label for="cloudKey">Código compartido de la alcancía</label><input id="cloudKey" type="password" placeholder="Código privado configurado en Cloudflare" autocomplete="off"><p class="cloud-status">La clave de JSONBin no se incluye en esta página. El código compartido se guarda en el navegador de cada celular y debe mantenerse privado.</p><p class="cloud-status">Al conectar, podrás descargar los datos existentes o iniciar un Bin vacío. La sincronización revisa cambios cada 5 segundos; los cambios simultáneos pueden sobrescribirse.</p><div><button id="cloudConnect" type="button">💙 Conectar alcancía</button> <button id="cloudDisconnect" type="button" class="secondary">Desconectar</button> <button id="cloudClose" type="button" class="secondary">Cerrar</button></div><p id="cloudStatus" class="cloud-status" role="status"></p></div></div></body></html>
