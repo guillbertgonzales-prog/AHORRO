@@ -21,6 +21,7 @@
     #depositBell[data-unread="true"]::after{content:'';position:absolute;top:3px;right:3px;width:10px;height:10px;background:#ad42d1;border:2px solid #fff;border-radius:50%}
     #depositNotices .deposit-notice{animation:depositNoticeEnter .3s ease-out}
     .deposit-notice-time{display:block;margin-top:6px;font-size:12px;color:#756582}
+    .notice-history-group{margin:18px 0 8px;font-size:13px;color:#7053b9}
     @keyframes depositNoticeEnter{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
     @media(prefers-reduced-motion:reduce){#depositNotices .deposit-notice{animation:none}}
     #depositNotices,#depositNoticeHistory{left:auto;right:max(12px,env(safe-area-inset-right))}
@@ -106,15 +107,21 @@
   }
   function renderHistory() {
     history.replaceChildren();
-    const title = document.createElement('h3'); title.textContent = '🔔 Avisos recientes';
+    const title = document.createElement('h3'); title.textContent = '🔔 Avisos';
     history.append(title);
     const items = readHistory();
     if (!items.length) { const empty=document.createElement('p'); empty.textContent='Todavía no hay avisos. Aquí podrás volver a leerlos.'; history.append(empty); }
+    let previousGroup='';
     for (const item of items) {
+      const group=dateKey(item.date)===dateKey(new Date())?'Hoy':'Anteriores';
+      if(group!==previousGroup){
+        const heading=document.createElement('h4');heading.className='notice-history-group';heading.textContent=group;history.append(heading);previousGroup=group;
+      }
       const name = item.profile === 'boo' ? 'Boo' : 'Sullivan';
       if (item.kind === 'missed') {
         const paid=state.entries.some(entry=>depositProfile(entry)===item.profile&&entry.recoveryFor===item.missedDay);
-        show(item.profile,name+': día sin depósito',paid ? 'Aporte adicional registrado ✓' : 'No registraste depósito el '+item.missedDay+'. El siguiente día corresponde agregar S/ 5 al ahorro diario.',true,{target:history,static:true,action:false});
+        const card=show(item.profile,name+': día sin depósito',paid ? 'Aporte adicional registrado ✓' : 'No registraste depósito el '+item.missedDay+'. El siguiente día corresponde agregar S/ 5 al ahorro diario.',true,{target:history,static:true,action:false});
+        addHistoryDate(card,item.date);
         continue;
       }
       const pending = item.profile === window.loveActiveUser && specialEligible(item.profile);
@@ -122,8 +129,13 @@
       const message = item.reminder ? (hasSpecialPayment(item.profile,specialToday(new Date(item.date)).period) ? 'Pago realizado ✓' : 'Recordatorio del pago especial de ese mes.')
         : (settings.hideAmounts ? 'Un aporte a nuestros sueños 💖' : 'Aporte: '+soles(Number(item.amount)||0));
       const card=show(item.profile,item.reminder ? name+': pago especial' : name+' registró un depósito',message,item.reminder,{target:history,static:true,action:item.reminder&&pending&&sameMonth});
-      const date=document.createElement('small');date.textContent=new Date(item.date).toLocaleString('es-PE',{timeZone:'America/Lima'});card.querySelector('.deposit-notice-copy').append(date);
+      addHistoryDate(card,item.date);
     }
+  }
+  function addHistoryDate(card,value){
+    const date=document.createElement('small');date.className='deposit-notice-time';
+    date.textContent=new Date(value).toLocaleString('es-PE',{timeZone:'America/Lima'});
+    card.querySelector('.deposit-notice-copy').append(date);
   }
   let storageKey = '', receipts = {}, timers = [], queue = [], activeNotice = null;
   function nextNotice() {
