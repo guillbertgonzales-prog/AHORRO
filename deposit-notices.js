@@ -66,12 +66,13 @@
       const items = Array.isArray(saved) ? [...saved] : [];
       // Reconstruir depósitos recientes incluso si este navegador estuvo cerrado.
       for (const entry of state.entries) {
-        const id='deposit:'+JSON.stringify([entry.id,entry.date,entry.profileId,entry.person,entry.amount]);
+        const id=window.noticeDepositId ? window.noticeDepositId(entry) : 'deposit:'+JSON.stringify([entry.id,entry.date,entry.profileId,entry.person,entry.amount]);
         if (!items.some(item=>item?.id===id)) items.push({id,profile:depositProfile(entry),reminder:false,amount:Number(entry.amount),date:entry.date,read:false});
       }
       if (!Array.isArray(items)) return [];
       const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const recent = items.filter(item => item && ['boo','sullivan'].includes(item.profile)
+      const normalized=window.normalizeNoticeHistory ? window.normalizeNoticeHistory(items) : items;
+      const recent = normalized.filter(item => item && ['boo','sullivan'].includes(item.profile)
         && Number.isFinite(Date.parse(item.date)) && Date.parse(item.date) > cutoff)
         .sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,30);
       return recent;

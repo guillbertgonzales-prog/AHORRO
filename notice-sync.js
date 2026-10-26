@@ -2,16 +2,34 @@
 (() => {
   const prefixes = ['alcancia_notice_history_v1:', 'alcancia_deposit_notices_v1:'];
   const isNotice = key => prefixes.some(prefix => key.startsWith(prefix));
+  function day(value) {
+    const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';
+    const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d).map(x=>[x.type,x.value]));
+    return p.year+'-'+p.month+'-'+p.day;
+  }
+  function depositId(entry){return 'deposit:'+JSON.stringify(entry.id ? [depositProfile(entry),entry.id] : [depositProfile(entry),entry.date,Number(entry.amount)]);}
+  function normalize(items) {
+    const records=new Map();
+    for(const item of Array.isArray(items)?items:[]) {
+      if(!item||!['boo','sullivan'].includes(item.profile)||!day(item.date)||Date.parse(item.date)<=Date.now()-30*86400000)continue;
+      let id;
+      if(item.reminder) id=item.kind==='missed'?'missed:'+item.profile+':'+item.missedDay:'special:'+item.profile+':'+day(item.date);
+      else {
+        const entry=state.entries.find(e=>depositId(e)===item.id) || state.entries.find(e=>depositProfile(e)===item.profile&&e.date===item.date&&Number(e.amount)===Number(item.amount));
+        // Los antiguos resúmenes se sustituyen por los depósitos originales.
+        if(!entry)continue;
+        id=depositId(entry);
+      }
+      const old=records.get(id);
+      records.set(id,{...item,id,read:item.read===true||old?.read===true});
+    }
+    return [...records.values()].sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,30);
+  }
+  window.normalizeNoticeHistory=normalize;
+  window.noticeDepositId=depositId;
   function combine(key, first, second) {
     if (key.startsWith(prefixes[0])) {
-      const records = new Map();
-      for (const item of [...(Array.isArray(first) ? first : []), ...(Array.isArray(second) ? second : [])]) {
-        if (!item || !Number.isFinite(Date.parse(item.date)) || Date.parse(item.date) <= Date.now() - 30*86400000) continue;
-        const id = item.id || JSON.stringify([item.profile,item.reminder,item.amount,item.date,item.kind,item.missedDay]);
-        const previous = records.get(id);
-        records.set(id, {...item,id,read:item.read===true || previous?.read===true});
-      }
-      return [...records.values()].sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,30);
+      return normalize([...(Array.isArray(first)?first:[]),...(Array.isArray(second)?second:[])]);
     }
     return {...first,...second};
   }
