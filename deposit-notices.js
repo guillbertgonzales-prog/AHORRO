@@ -61,12 +61,18 @@
   function readHistory() {
     try {
       const key = historyKey();
-      const items = JSON.parse(localStorage.getItem(key) || '[]');
+      const saved = JSON.parse((window.noticeStore || localStorage).getItem(key) || '[]');
+      const items = Array.isArray(saved) ? [...saved] : [];
+      // Reconstruir depósitos recientes incluso si este navegador estuvo cerrado.
+      for (const entry of state.entries) {
+        const id='deposit:'+JSON.stringify([entry.id,entry.date,entry.profileId,entry.person,entry.amount]);
+        if (!items.some(item=>item?.id===id)) items.push({id,profile:depositProfile(entry),reminder:false,amount:Number(entry.amount),date:entry.date,read:false});
+      }
       if (!Array.isArray(items)) return [];
       const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
       const recent = items.filter(item => item && ['boo','sullivan'].includes(item.profile)
-        && Number.isFinite(Date.parse(item.date)) && Date.parse(item.date) > cutoff).slice(0,30);
-      if (recent.length !== items.length) localStorage.setItem(key, JSON.stringify(recent));
+        && Number.isFinite(Date.parse(item.date)) && Date.parse(item.date) > cutoff)
+        .sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,30);
       return recent;
     } catch { return []; }
   }
@@ -77,13 +83,14 @@
   }
   function markHistoryRead() {
     const items = readHistory().map(item => ({...item, read:true}));
-    try { localStorage.setItem(historyKey(), JSON.stringify(items)); } catch {}
+    try { (window.noticeStore || localStorage).setItem(historyKey(), JSON.stringify(items)); } catch {}
     updateUnread();
   }
   function archive(profile, reminder, amount, extra = {}) {
+    if(!reminder){updateUnread();return;}
     const items = readHistory();
     items.unshift({profile, reminder:!!reminder, amount, date:new Date().toISOString(), read:!history.hidden,...extra});
-    try { localStorage.setItem(historyKey(), JSON.stringify(items.slice(0,30))); } catch {}
+    try { (window.noticeStore || localStorage).setItem(historyKey(), JSON.stringify(items.slice(0,30))); } catch {}
     if (!history.hidden) renderHistory();
     updateUnread();
   }
@@ -143,7 +150,7 @@
     queue = []; activeNotice = null;
     container.replaceChildren();
   }
-  function save() { try { localStorage.setItem(storageKey, JSON.stringify(receipts)); } catch {} }
+  function save() { try { (window.noticeStore || localStorage).setItem(storageKey, JSON.stringify(receipts)); } catch {} }
   function show(profile, title, message, reminder, options = {}) {
     const card = document.createElement('section');
     card.className = 'deposit-notice';
@@ -179,6 +186,7 @@
     return card;
   }
   function check() {
+    if (window.loveCloudStatus === 'connecting') return;
     const viewer = window.loveActiveUser;
     const visible = window.loveGateUnlocked === true && ['sullivan', 'boo'].includes(viewer)
       && document.getElementById('loveGate')?.hidden && document.getElementById('intro')?.hidden
@@ -191,9 +199,10 @@
     const key = 'alcancia_deposit_notices_v1:' + viewer + ':' + today;
     if (storageKey !== key) {
       clear(); closeHistory(); storageKey = key;
-      try { receipts = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch { receipts = {}; }
+      try { receipts = JSON.parse((window.noticeStore || localStorage).getItem(key) || '{}') || {}; } catch { receipts = {}; }
       if (!receipts || typeof receipts !== 'object' || Array.isArray(receipts)) receipts = {};
     }
+    try { receipts = {...receipts,...JSON.parse((window.noticeStore || localStorage).getItem(key) || '{}')}; } catch {}
     for (const profile of ['sullivan', 'boo']) {
       const name = profile === 'sullivan' ? 'Sullivan' : 'Boo';
       const missed=typeof missedDepositDay==='function' && profile===viewer ? missedDepositDay(profile) : null;
