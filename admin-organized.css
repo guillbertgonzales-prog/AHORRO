@@ -1,0 +1,45 @@
+#adminModal .admin-section-picker{display:none}#adminModal .admin-footer[hidden]{display:none!important}
+#adminModal .admin-section-context{font-size:14px;line-height:1.6;color:#806c91;margin:0 0 24px;padding-bottom:14px;border-bottom:1px solid #e7deef}
+#adminModal .admin-pane{scrollbar-width:thin;scrollbar-color:#cebbdf transparent}
+#adminModal .admin-complete-filters{padding:20px;border:1px solid #e5d8ef;border-radius:18px;background:#fff;box-sizing:border-box}
+#adminModal .admin-complete-rule-form,#adminModal #adminSpecialPaymentSettings{max-width:760px!important;box-sizing:border-box;padding:22px;margin:22px auto!important;border:1px solid #e5d8ef;border-radius:18px;background:#fff}
+#adminModal .admin-complete-rule-form h4{margin:0 0 4px}
+#adminModal .admin-complete-rule-form>p:empty{display:none}
+#adminModal .admin-complete-row{padding:18px 4px;align-items:flex-start}
+#adminModal .admin-reset-filters{padding:9px 16px}
+#adminModal .admin-pane>p{max-width:1120px;line-height:1.6}
+@media(min-width:900px){
+  #adminModal .admin-dialog{display:grid!important;grid-template-columns:218px minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto}
+  #adminModal .admin-head{grid-column:1/-1;grid-row:1}
+  #adminModal .monster-admin-banner{grid-column:1/-1;grid-row:2;margin:0!important;border-radius:0}
+  #adminModal .admin-dialog>.admin-note{grid-column:1/-1;grid-row:3;margin:0;padding:9px 24px;background:#fbf8ff}
+  #adminModal .admin-tabs{grid-column:1;grid-row:4/-1;display:flex;flex-direction:column;align-items:stretch;overflow-y:auto;overflow-x:hidden;padding:16px 12px!important;gap:7px;border-right:1px solid #e5d8ef;border-bottom:0;min-height:0}
+  #adminModal .admin-tabs .admin-tab{text-align:left;white-space:normal;padding:11px 13px;min-height:44px;flex-shrink:0;font-size:13px}
+  #adminModal .admin-pane{grid-column:2;grid-row:4;padding:28px!important;min-width:0;min-height:0}
+  #adminModal .admin-footer{grid-column:2;grid-row:5;min-width:0}
+}
+@media(max-width:899px){
+  #adminModal .admin-tabs{display:none!important}
+  #adminModal .admin-section-picker{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#fff;border-block:1px solid #e5d8ef;flex-shrink:0}
+  #adminModal .admin-section-picker label{font-size:13px;color:#806c91}
+  #adminModal .admin-section-picker select{min-height:46px;min-width:0;flex:1;border:1px solid #dac9ec;border-radius:12px;padding:10px 12px;background:#f5effc;color:#624294;font-size:16px}
+  #adminModal .monster-admin-banner{padding:10px 18px;margin:0!important}
+  #adminModal .monster-admin-banner small{display:none}
+  #adminModal .admin-dialog>.admin-note{display:none}
+  #adminModal .admin-complete-filters,#adminModal .admin-complete-rule-form,#adminModal #adminSpecialPaymentSettings{padding:16px}
+  #adminModal .admin-head h2{font-size:20px}
+}
+@media(max-width:380px){#adminModal .admin-complete-filters{grid-template-columns:1fr}#adminModal .admin-section-picker{padding-inline:12px}#adminModal .admin-pane{padding-inline:12px!important}}
+#adminModal .admin-nav-group-title{display:block;color:#947da7;font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;padding:16px 13px 5px;flex-shrink:0}
+#adminModal .admin-nav-group-title:first-child{padding-top:4px}
+#adminModal #adminGroupedMobileMenu[hidden]{display:none!important}
+@media(max-width:899px){
+  #adminModal .admin-section-picker{position:relative;z-index:15;justify-content:space-between}
+  #adminModal button.admin-sections-toggle{background:#efe5fb!important;color:#69469c!important;border:1px solid #dfcdef!important;box-shadow:none!important;border-radius:12px;padding:10px 13px;min-height:44px;white-space:nowrap}
+  #adminModal .admin-current-section{font-size:13px;color:#795f8e;text-align:right;min-width:0;overflow-wrap:anywhere}
+  #adminModal #adminGroupedMobileMenu{position:absolute;left:12px;right:12px;top:calc(100% + 5px);max-height:55dvh;overflow-y:auto;overscroll-behavior:contain;background:#fffaff;border:1px solid #dfd0ee;border-radius:18px;padding:12px;box-shadow:0 12px 35px #39204e30}
+  #adminModal .admin-mobile-group{display:grid;gap:5px;margin-bottom:10px}
+  #adminModal .admin-mobile-group h4{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:#947da7;margin:10px 9px 5px}
+  #adminModal .admin-mobile-group button{width:100%;min-height:44px;text-align:left;border:0!important;box-shadow:none!important;background:transparent!important;color:#6e587f!important;border-radius:11px;padding:10px 12px;font-size:14px}
+  #adminModal .admin-mobile-group button[aria-current="page"]{background:#eee3fa!important;color:#7048a4!important;font-weight:650}
+}

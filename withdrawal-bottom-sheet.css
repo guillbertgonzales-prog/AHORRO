@@ -1,0 +1,19 @@
+@media(max-width:700px){
+  #withdrawalModal{align-items:flex-end;justify-content:center;padding:0;background:#17102180}
+  #withdrawalModal .withdrawal-dialog{position:relative;width:100%;max-width:520px;max-height:calc(var(--withdrawal-viewport,100dvh) - 12px);display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;background:#fffaff;border:0;border-radius:26px 26px 0 0;padding:12px 0 0;box-shadow:0 -12px 40px #27133733;animation:withdrawalSheetUp .28s ease-out}
+  #withdrawalModal .withdrawal-sheet-handle{width:38px;height:4px;border-radius:6px;background:#d5c5e3;margin:0 auto 16px;flex-shrink:0}
+  #withdrawalModal .withdrawal-top{padding:0 20px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+  #withdrawalModal .withdrawal-top h2{font-size:21px;color:#624294;margin:0}
+  #withdrawalModal #closeWithdrawal{width:44px;height:44px;min-width:44px;border-radius:50%;padding:0;background:#fff!important;color:#624294!important;border:1px solid #e2d4ee!important;box-shadow:none!important}
+  #withdrawalModal .withdrawal-sheet-content{overflow-y:auto;overscroll-behavior:contain;min-height:0;padding:0 20px 12px;scroll-padding-bottom:20px}
+  #withdrawalModal .field{margin-bottom:18px}
+  #withdrawalModal label{display:block;font-weight:600;margin-bottom:8px;color:#624294}
+  #withdrawalModal input,#withdrawalModal select,#withdrawalModal textarea{font-size:16px!important;min-height:46px;border-radius:13px!important;box-sizing:border-box;max-width:100%}
+  #withdrawalModal .withdrawal-sheet-footer{flex-shrink:0;padding:12px 20px max(16px,env(safe-area-inset-bottom));background:#fffaff;border-top:1px solid #e7daf2;box-shadow:0 -3px 12px #7053b90a}
+  #withdrawalModal .withdrawal-sheet-footer .actions{display:flex;flex-wrap:wrap;gap:9px;margin:0}
+  #withdrawalModal .withdrawal-sheet-footer button{min-height:48px;border-radius:14px;font:inherit}
+  #withdrawalModal .withdrawal-sheet-footer button[type="submit"]{flex:2;min-width:160px;background:#7053b9!important;color:#fff!important;border:0}
+  #withdrawalModal #cancelWithdrawal{flex:1;background:#f2eafa!important;color:#624294!important;border:1px solid #e2d4ee!important}
+  @keyframes withdrawalSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+}
+@media(prefers-reduced-motion:reduce){#withdrawalModal .withdrawal-dialog{animation:none}}

@@ -121,7 +121,8 @@
       const name = item.profile === 'boo' ? 'Boo' : 'Sullivan';
       if (item.kind === 'missed') {
         const paid=state.entries.some(entry=>depositProfile(entry)===item.profile&&entry.recoveryFor===item.missedDay);
-        const card=show(item.profile,name+': día sin depósito',paid ? 'Aporte adicional registrado ✓' : 'No registraste depósito el '+item.missedDay+'. El siguiente día corresponde agregar S/ 5 al ahorro diario.',true,{target:history,static:true,action:false});
+        const waived=state.savingWaivers?.[item.profile+':'+item.missedDay];
+        const card=show(item.profile,name+': día sin depósito',waived?'Adicional exonerado ✓':paid ? 'Aporte adicional registrado ✓' : 'No registraste depósito el '+item.missedDay+'. Corresponde revisar el adicional del día olvidado.',true,{target:history,static:true,action:false});
         addHistoryDate(card,item.date);
         continue;
       }
@@ -224,12 +225,12 @@
         if(activeNotice?.kind==='missed'&&activeNotice.profile===profile) dismissNotice(activeNotice);
       }
       if (missed && !receipts['missed:'+profile]) {
-        show(profile,'¡'+name+', ayer olvidaste depositar!','Hoy debes agregar S/ 5 al ahorro diario. Total: de S/ 6.00 a S/ 6.50. 💜',true,{kind:'missed',onAction:()=>{
+        show(profile,'¡'+name+', ayer olvidaste depositar!','Hoy debes agregar '+soles(dailySavingRules().surcharge)+' al ahorro diario. Total: de '+soles(dailyDepositLimits(profile).min)+' a '+soles(dailyDepositLimits(profile).max)+'. 💜',true,{kind:'missed',onAction:()=>{
           closeHistory();document.getElementById('depositType').value='daily';updateSpecialControls();
           document.getElementById('mobileAddSaving')?.click();
-          const input=document.getElementById('amount');input.value='6';input.focus();
+          const input=document.getElementById('amount');input.value=String(dailyDepositLimits(profile).min);input.focus();
         }});
-        archive(profile,true,5,{kind:'missed',missedDay:missed});
+        archive(profile,true,dailySavingRules().surcharge,{kind:'missed',missedDay:missed});
         receipts['missed:'+profile]=true;save();
       }
       const deposits = state.entries.filter(item => depositProfile(item) === profile && dateKey(item.date) === today);

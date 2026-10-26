@@ -1,0 +1,29 @@
+/* Presentación del administrador; conserva sus controles y navegación. */
+#adminModal .admin-dialog{background:#fbf9fe}
+#adminModal .admin-head{background:linear-gradient(120deg,#f0e8fb,#eefaff);border-bottom:1px solid #e2d7ef;gap:16px}
+#adminModal .admin-head h2{color:#624294;line-height:1.3}
+#adminModal .admin-tabs{background:#fff;gap:9px;padding-top:12px;padding-bottom:12px;border-color:#e4d9f1;scroll-padding-inline:20px}
+#adminModal .admin-tabs .admin-tab{flex-shrink:0;min-height:44px;padding:11px 16px;border:1px solid #e3d8ef;border-radius:14px;background:#f6f2fb;color:#655177;box-shadow:none;font-weight:650;white-space:nowrap}
+#adminModal .admin-tabs .admin-tab.active,#adminModal .admin-tabs .admin-tab[aria-selected="true"]{background:#7053b9;color:white;border-color:#7053b9;box-shadow:0 4px 12px #7053b926}
+#adminModal .admin-pane h3{color:#624294;margin-top:26px;margin-bottom:14px;font-size:20px;line-height:1.4}
+#adminModal .admin-pane>h3:first-child{margin-top:0}
+#adminModal .admin-pane h4{color:#655177;margin-top:26px;margin-bottom:12px}
+#adminModal .admin-pane .field{margin-bottom:18px}
+#adminModal .admin-pane .field label{display:block;margin-bottom:8px;font-weight:600;color:#604b74}
+#adminModal .admin-pane .admin-note{line-height:1.65;color:#776784}
+#adminModal .admin-pane hr{border:0;border-top:1px solid #e4d9ef;margin:28px 0}
+#adminModal .admin-pane .grid{gap:18px}
+#adminModal .admin-pane .switch{padding-block:10px;line-height:1.5}
+#adminModal button:not(.admin-tab){min-height:44px;border-radius:13px;font:inherit;font-weight:600;line-height:1.4}
+#adminModal button:not(.secondary):not(.danger):not(.admin-tab):not(.deposit-notice-close){background:#7053b9;color:#fff;border:1px solid #7053b9;box-shadow:0 3px 10px #7053b91a}
+#adminModal button.secondary{background:#f3eef9;color:#694b99;border:1px solid #dfd2ee;box-shadow:none}
+#adminModal button.danger{background:#fff0f2;color:#a43249;border:1px solid #efc0ca;box-shadow:none}
+#adminModal button:focus-visible,#adminModal input:focus-visible,#adminModal select:focus-visible,#adminModal textarea:focus-visible{outline:3px solid #a68ad6;outline-offset:3px}
+#adminModal button:disabled{opacity:.55;cursor:not-allowed}
+#adminModal .admin-quick-actions button.secondary{background:#fff;border-color:#e2d7ef;padding:18px;text-align:left;gap:9px}
+#adminModal .admin-footer{background:#fffcff;border-top:1px solid #dfd2ee;box-shadow:0 -4px 16px #7053b909}
+#adminModal .admin-footer .actions{display:flex;flex-wrap:wrap;gap:12px}
+#adminModal #adminSave{padding:12px 24px}
+#adminModal #adminSave.has-draft{box-shadow:0 0 0 3px #7053b921}
+@media(hover:hover){#adminModal .admin-tab:not(.active):hover,#adminModal button.secondary:hover{background:#eae0f7}#adminModal button.danger:hover{background:#ffe3e8}}
+@media(max-width:550px){#adminModal .admin-tabs{gap:7px}#adminModal .admin-tabs .admin-tab{padding:10px 13px}#adminModal .admin-footer .actions>button{flex:1;min-width:130px}#adminModal .admin-pane h3{font-size:18px}}
