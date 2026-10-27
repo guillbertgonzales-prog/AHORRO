@@ -30,7 +30,7 @@ function bothSavedToday(now = new Date()) {
   function update(){
     const profile=window.loveActiveUser;
     const visible=window.loveGateUnlocked===true&&['boo','sullivan'].includes(profile)&&document.getElementById('loveGate')?.hidden&&document.getElementById('intro')?.hidden&&!document.hidden;
-    greeting.hidden=!visible||profile==='sullivan';
+    greeting.hidden=true;
     if(!visible){hide();return;}
     if(identity!==profile){identity=profile;hide();text.textContent=profile==='boo'?'¡Hola, Boo! 🌸':'¡Hola, Sullivan! 💙';avatar.replaceChildren();if(window.makePersonAvatar)avatar.append(window.makePersonAvatar('',profile));}
     if(window.loveCloudStatus==='connecting'||!bothSavedToday()){hide();return;}
