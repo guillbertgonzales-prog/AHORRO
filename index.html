@@ -861,8 +861,55 @@ $('withdrawalForm').addEventListener('submit',e=>{
 const originalRenderWithdrawals=render;render=function(){originalRenderWithdrawals();renderWithdrawals()};
 renderWithdrawals();
 
-// Conexión de datos configurada de forma privada en cloud-connection.js.
+// JSONBin directo: sin Cloudflare Worker. Access Key guardada localmente.
+(function(){
+ const $=id=>document.getElementById(id);
+ const JSONBIN_BIN_ID='6ae0dab7ac6210605a56c83b';
+ const JSONBIN_ACCESS_KEY='$2a$10$g75zw3rnl0CHr0xE7k6sfOQvt9Dz31aR5InsfJfBd.IezrCOlTdtC';
+ let cfg=null, busy=false, uploading=false, dirty=false, lastRemote='', timer=null;
+ const say=(m)=>{console.info('[Sincronización]',m)};
 
+ const valid=d=>d&&typeof d==='object'&&Array.isArray(d.entries)&&Array.isArray(d.goals);
+ async function request(method,payload){
+  const r=await fetch('https://api.jsonbin.io/v3/b/'+encodeURIComponent(cfg.bin),{
+   method,headers:{'X-Access-Key':cfg.key,'Content-Type':'application/json',...(method==='GET'?{'X-Bin-Meta':'false'}:{})},
+   ...(method==='PUT'?{body:JSON.stringify(payload)}:{})
+  });
+  const d=await r.json().catch(()=>null);
+  if(!r.ok)throw Error((d&&(d.message||d.error))||'HTTP '+r.status);
+  return d&&Object.prototype.hasOwnProperty.call(d,'record')?d.record:d;
+ }
+ function apply(d){if(window.mergeNoticeSync)d.noticeSync=window.mergeNoticeSync(d.noticeSync,state.noticeSync);state=d;window.dispatchEvent(new Event("alcancia-state-loaded"));localStorage.setItem(KEY,JSON.stringify(state));syncActiveGoal();render();if(typeof renderCalendar==='function')renderCalendar();if(typeof renderAdminRecords==='function')renderAdminRecords()}
+ async function upload(){
+  if(!cfg||uploading||!dirty)return;
+  uploading=true;const snapshot=JSON.stringify(state);
+  try{await request('PUT',JSON.parse(snapshot));lastRemote=snapshot;window.loveCloudSavedAt=Date.now();window.loveCloudStatus='connected';if(JSON.stringify(state)===snapshot)dirty=false;window.loveCloudPending=dirty;say('💙 Ahorros guardados en JSONBin.')}catch(e){window.loveCloudStatus='error';window.loveCloudPending=true;say('⚠️ Error al guardar: '+e.message)}
+  finally{uploading=false;if(dirty&&JSON.stringify(state)!==snapshot)setTimeout(upload,400)}
+ }
+ async function poll(){
+  if(!cfg||busy||uploading||dirty||document.hidden)return;
+  busy=true;
+  try{const d=await request('GET');if(!valid(d))throw Error('El Bin no contiene una alcancía válida');const serial=JSON.stringify(d);if(serial!==lastRemote){lastRemote=serial;apply(d)}window.loveCloudCheckedAt=Date.now();window.loveCloudStatus='connected';say('💙 Conectado: comprobación correcta.')}catch(e){window.loveCloudStatus='error';say('⚠️ Error al actualizar: '+e.message)}finally{busy=false}
+ }
+ function start(){clearInterval(timer);timer=setInterval(poll,5000)}
+ const oldPersist=persist;
+ persist=function(){oldPersist();if(cfg){dirty=true;window.loveCloudPending=true;upload()}};
+ window.loveCloudStatus='connecting';
+ async function connectAutomatically(){
+  if(!/^[a-f0-9]{24}$/i.test(JSONBIN_BIN_ID)||!JSONBIN_ACCESS_KEY||JSONBIN_ACCESS_KEY==='PEGA_AQUI_TU_ACCESS_KEY'){
+   window.loveCloudStatus='error';say('⚠️ Configura el Bin ID y la Access Key en el HTML.');return;
+  }
+  cfg={bin:JSONBIN_BIN_ID,key:JSONBIN_ACCESS_KEY};
+  try{
+   const d=await request('GET');
+   if(valid(d)){lastRemote=JSON.stringify(d);apply(d)}
+   else {cfg=null;window.loveCloudStatus='error';say('⚠️ Inicializa el Bin con datos compatibles antes de usarlo.');return}
+   dirty=false;window.loveCloudCheckedAt=Date.now();window.loveCloudStatus='connected';window.dispatchEvent(new Event('alcancia-cloud-ready'));start();say('💙 JSONBin conectado automáticamente.');
+  }catch(e){cfg=null;window.loveCloudStatus='error';say('⚠️ No se pudo conectar: '+e.message)}
+ }
+ connectAutomatically();
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});window.addEventListener('focus',poll);
+})();
 </script><script>
 (() => {
  const gate = document.getElementById('loveGate');
@@ -1500,4 +1547,4 @@ body.amounts-hidden #withdrawalLoveAmount{font-size:0}body.amounts-hidden #withd
  updateNameFields();
 })();
 </script>
-<script id="calendar-faces-init">if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>renderSavingsCalendar(),{once:true})}else{renderSavingsCalendar()}</script><script id="special-payment-init">document.getElementById('depositType').addEventListener('change',()=>{document.getElementById('amount').value='';updateSpecialControls()});document.getElementById('person').addEventListener('change',()=>{updateSpecialControls();renderSavingsCalendar()});document.getElementById('mobileAddSaving').addEventListener('click',updateSpecialControls);window.addEventListener('focus',()=>renderSavingsCalendar());if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>renderSavingsCalendar(),{once:true});else renderSavingsCalendar();</script><script id="special-payment-admin-init">document.getElementById('adminSaveSpecial').addEventListener('click',saveSpecialAdmin);fillSpecialAdmin();</script><script id="calendar-character-portraits">for(const [id,profile] of [['calendarSullivanPortrait','sullivan'],['calendarBooPortrait','boo']]){const mount=document.getElementById(id);if(mount&&window.makePersonAvatar){mount.replaceChildren(window.makePersonAvatar('',profile))}}</script><script id="fixed-character-name-preview">(()=>{for(const [index,character] of [[1,'Sullivan'],[2,'Boo']]){const input=document.getElementById('adminPerson'+index);const hint=document.createElement('small');hint.className='admin-note';hint.id='fixedCharacterName'+index;hint.textContent='Siempre será '+character+' · Solo cambia tu nombre';input.after(hint);}})();</script><script src="./notice-sync.js"></script><script src="./missed-deposit.js"></script><script src="./deposit-notices.js"></script><script src="./admin-followup.js"></script><script src="./admin-interface.js"></script><link rel="stylesheet" href="./admin-polish.css"><link rel="stylesheet" href="./saving-form-design.css"><script src="./saving-form-design.js"></script><link rel="stylesheet" href="./saving-bottom-sheet.css"><script src="./saving-bottom-sheet.js"></script><link rel="stylesheet" href="./withdrawal-bottom-sheet.css"><script src="./withdrawal-bottom-sheet.js"></script><script src="./saving-mobile-safety.js"></script><script src="./daily-welcome.js"></script><link rel="stylesheet" href="./mobile-page-layout.css"><script src="./mobile-page-layout.js"></script><link rel="stylesheet" href="./admin-complete.css"><script src="./admin-complete.js"></script><link rel="stylesheet" href="./admin-organized.css"><script src="./admin-organized.js"></script><script src="./cloud-connection.js"></script></body></html>
+<script id="calendar-faces-init">if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>renderSavingsCalendar(),{once:true})}else{renderSavingsCalendar()}</script><script id="special-payment-init">document.getElementById('depositType').addEventListener('change',()=>{document.getElementById('amount').value='';updateSpecialControls()});document.getElementById('person').addEventListener('change',()=>{updateSpecialControls();renderSavingsCalendar()});document.getElementById('mobileAddSaving').addEventListener('click',updateSpecialControls);window.addEventListener('focus',()=>renderSavingsCalendar());if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>renderSavingsCalendar(),{once:true});else renderSavingsCalendar();</script><script id="special-payment-admin-init">document.getElementById('adminSaveSpecial').addEventListener('click',saveSpecialAdmin);fillSpecialAdmin();</script><script id="calendar-character-portraits">for(const [id,profile] of [['calendarSullivanPortrait','sullivan'],['calendarBooPortrait','boo']]){const mount=document.getElementById(id);if(mount&&window.makePersonAvatar){mount.replaceChildren(window.makePersonAvatar('',profile))}}</script><script id="fixed-character-name-preview">(()=>{for(const [index,character] of [[1,'Sullivan'],[2,'Boo']]){const input=document.getElementById('adminPerson'+index);const hint=document.createElement('small');hint.className='admin-note';hint.id='fixedCharacterName'+index;hint.textContent='Siempre será '+character+' · Solo cambia tu nombre';input.after(hint);}})();</script><script src="./notice-sync.js"></script><script src="./missed-deposit.js"></script><script src="./deposit-notices.js"></script><script src="./admin-followup.js"></script><script src="./admin-interface.js"></script><link rel="stylesheet" href="./admin-polish.css"><link rel="stylesheet" href="./saving-form-design.css"><script src="./saving-form-design.js"></script><link rel="stylesheet" href="./saving-bottom-sheet.css"><script src="./saving-bottom-sheet.js"></script><link rel="stylesheet" href="./withdrawal-bottom-sheet.css"><script src="./withdrawal-bottom-sheet.js"></script><script src="./saving-mobile-safety.js"></script><script src="./daily-welcome.js"></script><link rel="stylesheet" href="./mobile-page-layout.css"><script src="./mobile-page-layout.js"></script><link rel="stylesheet" href="./admin-complete.css"><script src="./admin-complete.js"></script><link rel="stylesheet" href="./admin-organized.css"><script src="./admin-organized.js"></script><link rel="stylesheet" href="./admin-payment-editor.css"><script src="./admin-payment-editor.js"></script><link rel="stylesheet" href="./main-backups.css"><script src="./main-backups.js"></script></body></html>
