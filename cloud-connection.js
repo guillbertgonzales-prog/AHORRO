@@ -15,7 +15,7 @@
   form.append(label,input,submit,message);panel.append(title,note,form);
   (document.querySelector('[data-pane="general"]')||document.body).append(panel);
   const launch=document.createElement('button');launch.type='button';launch.className='secondary cloud-connect-launch';launch.textContent='☁️ Conectar mis ahorros';launch.hidden=true;
-  document.querySelector('.wrap>header')?.append(launch);
+  // Acceso retirado de la página principal; la configuración permanece en Administración.
   launch.onclick=()=>{el('openAdmin')?.click();selectAdminTab('general');panel.scrollIntoView({block:'center'});input.focus()};
   const style=document.createElement('style');style.textContent='.cloud-connect-panel{padding:20px;margin:20px 0;border:1px solid #dfd1ed;border-radius:18px;background:#fffaff;color:#624294}.cloud-connect-panel p{font-size:14px;line-height:1.6}.cloud-connect-panel label{display:block;margin-bottom:8px}.cloud-connect-panel input{width:100%;box-sizing:border-box;min-height:46px;font-size:16px;margin-bottom:12px}.cloud-connect-panel button{min-height:44px;padding:12px}.cloud-connect-launch{margin:16px 0}.cloud-connect-launch[hidden]{display:none!important}';document.head.append(style);
   function say(text){message.textContent=text;}
