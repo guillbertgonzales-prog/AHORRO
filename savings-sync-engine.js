@@ -13,21 +13,30 @@
     const raw=item.id?String(item.id):JSON.stringify([item.date,item.profileId||item.person,item.goalId||'original']);
     const count=counts.get(raw)||0;counts.set(raw,count+1);result.set(raw+'#'+count,item);
   }return result;}
-  function merge(base,local,remote,path=''){
+  function merge(base,local,remote,path='',onConflict){
     if(equal(local,base))return remote;if(equal(remote,base)||equal(local,remote))return local;
     if(path==='noticeSync'&&window.mergeNoticeSync)return window.mergeNoticeSync(remote===absent?{}:remote,local===absent?{}:local);
     if(Array.isArray(base)&&Array.isArray(local)&&Array.isArray(remote)&&['entries','withdrawals','goals','adminAudit'].includes(path)){
       const b=keyed(base,path),l=keyed(local,path),r=keyed(remote,path),out=[];
-      for(const key of new Set([...b.keys(),...l.keys(),...r.keys()])){const item=merge(b.has(key)?b.get(key):absent,l.has(key)?l.get(key):absent,r.has(key)?r.get(key):absent,path+'.'+key);if(item!==absent)out.push(item);}
+      for(const key of new Set([...b.keys(),...l.keys(),...r.keys()])){const item=merge(b.has(key)?b.get(key):absent,l.has(key)?l.get(key):absent,r.has(key)?r.get(key):absent,path+'.'+key,onConflict);if(item!==absent)out.push(item);}
       return path==='adminAudit'?out.sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,500):out;
     }
     if([base,local,remote].every(value=>value!==absent&&value&&typeof value==='object'&&!Array.isArray(value))){
       const out={};for(const key of new Set([...Object.keys(base),...Object.keys(local),...Object.keys(remote)])){
-        const value=merge(Object.hasOwn(base,key)?base[key]:absent,Object.hasOwn(local,key)?local[key]:absent,Object.hasOwn(remote,key)?remote[key]:absent,path?path+'.'+key:key);if(value!==absent)out[key]=value;
+        const value=merge(Object.hasOwn(base,key)?base[key]:absent,Object.hasOwn(local,key)?local[key]:absent,Object.hasOwn(remote,key)?remote[key]:absent,path?path+'.'+key:key,onConflict);if(value!==absent)out[key]=value;
       }return out;
     }
     if(path.startsWith('awards.')&&[local,remote].every(Array.isArray))return [...new Set([...local,...remote])];
+    if(onConflict)return onConflict(path,local,remote);
     throw Error('CONFLICT:'+path);
+  }
+  // Una copia antigua sin cola pendiente puede ponerse al día si todos sus
+  // movimientos siguen presentes e idénticos en la nube. No mezcla borrados.
+  function contained(local,remote){
+    return ['entries','withdrawals','goals'].every(name=>{
+      const available=keyed(remote[name]||[],name);
+      return [...keyed(local[name]||[],name)].every(([key,item])=>available.has(key)&&equal(item,available.get(key)));
+    });
   }
   function business(value){const out={...value};delete out.noticeSync;return canonical(out);}
   window.SavingsSyncTools={merge,equal,business};
@@ -63,7 +72,7 @@
     }
     async function sync(reason='auto'){
       const manual=reason==='manual';
-      if(busy||conflict&&!manual||!options.visible()||options.online?.()===false)return;
+      if(busy||!options.visible()||options.online?.()===false)return;
       if(!manual&&clock.now()<cooldown)return;
       if(reason==='focus'&&lastCheck&&clock.now()-lastCheck<5000&&!pending)return;
       busy=true;status('connecting','Comprobando los ahorros…');
@@ -72,6 +81,7 @@
         const local=clone(options.getState());let next;
         if(base){next=merge(base,local,remote);}
         else if(business(local)===business(remote)){next={...remote};if(window.mergeNoticeSync)next.noticeSync=window.mergeNoticeSync(remote.noticeSync,local.noticeSync);}
+        else if(!pending&&contained(local,remote)){next=remote;}
         else if(!pending&&!starting.entries.length&&!(starting.withdrawals||[]).length&&business(local)===business(starting)){next=remote;}
         else {preserve(local,remote);conflict=remote;status('conflict','Las copias de este navegador y de la nube difieren. Se conservaron ambas para revisarlas.');return;}
         if(!valid(next))throw Error('INVALID_STATE');preserve(local,remote);
@@ -92,7 +102,13 @@
       }catch(error){
         if(error.message.startsWith('CONFLICT:')){
           conflict=latestRemote||true;try{preserve(options.getState(),latestRemote||base)}catch{}
-          status('conflict','Otro dispositivo modificó el mismo dato. Se conservan los cambios locales; revisa las copias antes de continuar.');
+          // Seguir recibiendo los pagos independientes aunque otro campo
+          // necesite revisión; nunca subir una resolución elegida a ciegas.
+          if(base&&latestRemote){
+            const preview=merge(base,options.getState(),latestRemote,'',(_path,local)=>local);
+            if(valid(preview)&&!equal(preview,options.getState())){options.applyState(clone(preview));lastLocal=business(preview);journal();}
+          }
+          status('conflict','Los pagos sin conflicto se actualizan automáticamente. Hay una corrección pendiente de revisión; ambas copias se conservan.');
         }else{
           failed++;const blocked=error.status===401||error.status===403||error.status===429;
           cooldown=clock.now()+(blocked?1800000:Math.min(300000,30000*Math.pow(2,failed-1)));
@@ -110,3 +126,4 @@
     return {changed,sync,recoverCloud,start,inspect:()=>({pending,metadata,busy,conflict:!!conflict,lastCheck})};
   };
 })();
+
