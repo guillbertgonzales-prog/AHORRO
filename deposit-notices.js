@@ -199,8 +199,8 @@
     }
     return card;
   }
-  function check() {
-    if (window.loveCloudStatus === 'connecting') return;
+  function check(localPayment = false) {
+    if (window.loveCloudStatus === 'connecting' && localPayment !== true) return;
     const viewer = window.loveActiveUser;
     const visible = window.loveGateUnlocked === true && ['sullivan', 'boo'].includes(viewer)
       && document.getElementById('loveGate')?.hidden && document.getElementById('intro')?.hidden
@@ -278,6 +278,10 @@
     section.append(preview); admin.append(section);
   }
   setInterval(check, 1000);
+  window.addEventListener('alcancia-payment-saved', () => {
+    check(true);
+    if (!history.hidden) renderHistory();
+  });
   window.addEventListener('focus', check);
   document.addEventListener('visibilitychange', check);
   check();

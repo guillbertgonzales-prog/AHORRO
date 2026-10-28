@@ -96,7 +96,8 @@ function validateAdminPayment(values, editingIndex=-1, now=new Date()) {
     const change={id:'payment-change-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),date:recordedAt,by:window.loveActiveUser,sections:[editing?'Corrección de pago':'Registro de pago de otra fecha'],payment:{id:replacement.id,reason:values.reason.trim(),effectiveDate:checked.date,from:editing?{amount:editing.amount,date:editing.date,profile:depositProfile(editing)}:null,to:{amount:checked.amount,date:checked.date,profile}}};
     state.adminAudit=[change,...(Array.isArray(previousAudit)?previousAudit:[])].slice(0,500);
     try{persist();}catch{state.entries=previousEntries;state.adminAudit=previousAudit;status.textContent='No se pudo guardar. El registro anterior se conserva.';busy=false;save.disabled=false;return;}
-    render();if(typeof renderSavingsCalendar==='function')renderSavingsCalendar();renderAdminRecords();updateSpecialControls();
+    render();if(typeof renderSavingsCalendar==='function')renderSavingsCalendar();renderAdminRecords();updateSpecialControls();window.dispatchEvent(new Event('alcancia-payment-saved'));
+    if(!editing&&typeof showSaveCelebration==='function')showSaveCelebration(checked.amount,replacement.person,replacement.message);
     const label=values.day;reset();refresh();status.textContent='Pago guardado en la fecha '+label+'. Se actualizaron el calendario y los totales. La sincronización depende de la conexión activa.';
     setTimeout(()=>{busy=false;save.disabled=false},900);
   };
