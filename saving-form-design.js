@@ -65,7 +65,7 @@
   const selectLabel=make('label','Retiro que vas a devolver'),select=make('select');select.id='returnWithdrawalSelect';selectLabel.htmlFor=select.id;
   const note=make('p','Se registrará el mismo monto en la meta del retiro. Esta devolución es independiente de tu ahorro diario.');
   const status=make('p');status.id='returnWithdrawalStatus';status.setAttribute('role','status');detail.append(selectLabel,select,note,status);box.append(label,detail);type.closest('.field').after(box);
-  const style=make('style');style.textContent='.saving-return-option{padding:14px;margin:12px 0 20px;border:1px solid #d7c6ee;border-radius:15px;background:#f5efff}.saving-return-option>label{display:flex;align-items:center;gap:10px;margin:0;cursor:pointer}.saving-return-option input[type=checkbox]{width:20px;height:20px;accent-color:#7053b9;flex-shrink:0}.saving-return-option [hidden]{display:none!important}.saving-return-option select{width:100%;min-height:44px;margin-top:6px}.saving-return-option p{font-size:13px;line-height:1.5;color:#756582}.saving-return-option #returnWithdrawalDetail{margin-top:14px}';document.head.append(style);
+  const style=make('style');style.textContent='.saving-return-option{padding:14px;margin:12px 0 20px;border:1px solid #d7c6ee;border-radius:15px;background:#f5efff}.saving-return-option>label{display:flex;align-items:center;gap:10px;margin:0;cursor:pointer}.saving-return-option input[type=checkbox]{width:20px;height:20px;accent-color:#7053b9;flex-shrink:0}.saving-return-option[hidden],.saving-return-option [hidden]{display:none!important}.saving-return-option select{width:100%;min-height:44px;margin-top:6px}.saving-return-option p{font-size:13px;line-height:1.5;color:#756582}.saving-return-option #returnWithdrawalDetail{margin-top:14px}';document.head.append(style);
   const baseUpdate=updateSpecialControls;
   let signature='',busy=false,savedFields=null,lastProfile=selectedDepositProfile();
   const cents=n=>Math.round(Number(n)*100);
@@ -85,7 +85,7 @@
   }
   function refresh(){
     const profile=selectedDepositProfile();if(profile!==lastProfile){lastProfile=profile;toggle.checked=false;savedFields=null;mode();}
-    const list=available(),next=JSON.stringify([selectedDepositProfile(),state.goals.map(g=>[g.id,g.name]),list.map(w=>[w.id,w.amount,w.goalId,w.date,w.reason])]);if(next===signature)return;signature=next;
+    const list=available(),next=JSON.stringify([selectedDepositProfile(),state.goals.map(g=>[g.id,g.name]),list.map(w=>[w.id,w.amount,w.goalId,w.date,w.reason])]);box.hidden=!list.length;if(!list.length&&toggle.checked){toggle.checked=false;mode();}if(next===signature)return;signature=next;
     const chosen=select.value;select.replaceChildren();const blank=make('option',list.length?'Selecciona el retiro':'No hay retiros pendientes');blank.value='';select.append(blank);
     for(const w of list){const g=state.goals.find(g=>g.id===w.goalId);const option=make('option',soles(Number(w.amount))+' · '+new Date(w.date).toLocaleDateString('es-PE',{timeZone:'America/Lima'})+' · '+g.name+(w.reason?' · '+w.reason:''));option.value=w.id;select.append(option);}
     select.value=list.some(w=>w.id===chosen)?chosen:list.length===1?list[0].id:'';
