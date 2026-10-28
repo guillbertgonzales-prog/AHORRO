@@ -1,7 +1,9 @@
 function validateAdminPayment(values, editingIndex=-1, now=new Date()) {
   if(!['sullivan','boo'].includes(values.profile))throw Error('Selecciona Sullivan o Boo.');
   if(!state.goals.some(goal=>goal.id===values.goal))throw Error('Selecciona una meta válida.');
-  if(!['daily','special'].includes(values.type))throw Error('Selecciona el tipo de pago.');
+  const returning=state.entries[editingIndex]?.withdrawalReturnId;
+  if(!['daily','special'].includes(values.type)&&!(returning&&values.type==='withdrawal-return'))throw Error('Selecciona el tipo de pago.');
+  if(returning){const original=state.entries[editingIndex];if(values.type!=='withdrawal-return'||values.profile!==depositProfile(original)||values.goal!==original.goalId||Number(values.amount)!==Number(original.amount))throw Error('La devolución conserva el retiro, la persona, la meta y el monto originales. Puedes corregir la fecha, el método o el mensaje.');}
   if(!['yape','transferencia','efectivo'].includes(values.method))throw Error('Selecciona cómo se realizó el depósito.');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(values.day)||!/^\d{2}:\d{2}$/.test(values.time))throw Error('Indica fecha y hora.');
   const date=new Date(values.day+'T'+values.time+':00-05:00');
@@ -26,7 +28,7 @@ function validateAdminPayment(values, editingIndex=-1, now=new Date()) {
   field('goal','Meta',null,[]);
   field('day','Fecha del depósito (Perú)','date');field('time','Hora del depósito (Perú)','time');
   const amount=field('amount','Monto realmente depositado (S/)','number');amount.min='0.01';amount.step='0.01';amount.max='100000000';amount.inputMode='decimal';
-  field('type','Tipo de pago',null,[['daily','Ahorro diario'],['special','Pago especial']]);
+  field('type','Tipo de pago',null,[['daily','Ahorro diario'],['special','Pago especial'],['withdrawal-return','Devolución de retiro']]);
   field('method','Método',null,[['','Seleccionar'],['yape','Yape'],['transferencia','Transferencia'],['efectivo','Efectivo']]);
   const message=field('message','Dedicatoria (opcional)','text');message.required=false;message.maxLength=120;
   const reason=field('reason','Motivo del registro o corrección','text');reason.maxLength=250;
@@ -65,11 +67,11 @@ function validateAdminPayment(values, editingIndex=-1, now=new Date()) {
   fields.day.addEventListener('change',()=>{if(/^\d{4}-\d{2}-\d{2}$/.test(fields.day.value))renderPaymentCalendar(true);});
   cancel.addEventListener('click',()=>{calendar.hidden=true;});
   function goals(){const chosen=fields.goal.value;fields.goal.replaceChildren();state.goals.forEach(goal=>{const option=make('option',goal.name);option.value=goal.id;fields.goal.append(option)});fields.goal.value=state.goals.some(g=>g.id===chosen)?chosen:state.activeGoalId;}
-  function reset(){editing=null;baseline='';calendar.hidden=true;form.reset();goals();fields.day.max=savingsPeruDay(new Date());fields.day.value=fields.day.max;fields.time.value=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());fields.profile.value=window.loveActiveUser||'sullivan';title.textContent='🗓️ Registrar pago de otro día';save.textContent='Guardar pago';cancel.hidden=true;selection.value='';}
+  function reset(){for(const key of ['profile','goal','amount','type'])fields[key].disabled=false;editing=null;baseline='';calendar.hidden=true;form.reset();goals();fields.day.max=savingsPeruDay(new Date());fields.day.value=fields.day.max;fields.time.value=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date());fields.profile.value=window.loveActiveUser||'sullivan';title.textContent='🗓️ Registrar pago de otro día';save.textContent='Guardar pago';cancel.hidden=true;selection.value='';}
   function edit(entry){
     if(!state.entries.includes(entry))return;
     reset();editing=entry;baseline=JSON.stringify(entry);
-    fields.profile.value=depositProfile(entry)||'sullivan';fields.goal.value=entry.goalId||'original';fields.day.value=savingsPeruDay(entry.date);fields.time.value=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date));fields.amount.value=entry.amount;fields.type.value=entry.depositType==='special'?'special':'daily';fields.method.value=entry.depositMethod||'';fields.message.value=entry.message||'';
+    fields.profile.value=depositProfile(entry)||'sullivan';fields.goal.value=entry.goalId||'original';fields.day.value=savingsPeruDay(entry.date);fields.time.value=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(entry.date));fields.amount.value=entry.amount;fields.type.value=entry.withdrawalReturnId?'withdrawal-return':entry.depositType==='special'?'special':'daily';if(entry.withdrawalReturnId)for(const key of ['profile','goal','amount','type'])fields[key].disabled=true;fields.method.value=entry.depositMethod||'';fields.message.value=entry.message||'';
     renderPaymentCalendar(true);
     title.textContent='✏️ Editar pago registrado';save.textContent='Guardar cambios del pago';cancel.hidden=false;status.textContent='Modifica los datos e indica el motivo antes de guardar.';
     selectAdminTab(pane.dataset.pane);section.scrollIntoView({block:'start',behavior:'smooth'});fields.day.focus({preventScroll:true});
@@ -106,3 +108,4 @@ function validateAdminPayment(values, editingIndex=-1, now=new Date()) {
   new MutationObserver(()=>{if(!modal.hidden){if(!editing)goals();refresh()}}).observe(modal,{attributes:true,attributeFilter:['hidden']});
   setInterval(()=>{if(!modal.hidden)refresh()},1000);reset();refresh();renderAdminRecords();
 })();
+
