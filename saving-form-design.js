@@ -44,6 +44,7 @@
     const entered=amount.value===''?null:Number(amount.value),valid=Number.isFinite(entered)&&entered>=Number(amount.min)&&entered<=Number(amount.max);
     chips.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(entered!==null&&Math.abs(entered-(Number(button.dataset.base)+surcharge))<0.001)));
     methods.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(method.value===button.dataset.method)));
+    if(form.dataset.withdrawalReturn==='true'){chips.hidden=true;base.text.textContent='Devolución de retiro';extra.node.hidden=true;base.value.textContent=entered>0?soles(entered):'—';total.value.textContent=entered>0?soles(entered):'Selecciona un retiro';return;}
     base.text.textContent=special?'Pago especial':'Ahorro diario';extra.node.hidden=!surcharge;extra.value.textContent=soles(surcharge);
     base.value.textContent=valid?soles(entered-surcharge):'—';total.value.textContent=valid?soles(entered):'Elige un monto';
   }
@@ -51,3 +52,68 @@
   form.addEventListener('submit',()=>setTimeout(update,0));
   setInterval(update,1000);update();
 })();
+
+/* Devolución de retiros desde el mismo formulario de ahorro. */
+(() => {
+  const form=document.getElementById('form');if(!form)return;
+  const el=id=>document.getElementById(id),amount=el('amount'),goal=el('savingGoalSelect'),type=el('depositType');
+  const make=(tag,text)=>{const node=document.createElement(tag);if(text)node.textContent=text;return node;};
+  const box=make('section');box.className='saving-return-option';
+  const label=make('label'),toggle=make('input');toggle.type='checkbox';toggle.id='returnWithdrawalToggle';
+  label.htmlFor=toggle.id;label.append(toggle,make('span','↩️ Devolver un retiro'));
+  const detail=make('div');detail.id='returnWithdrawalDetail';detail.hidden=true;toggle.setAttribute('aria-controls',detail.id);
+  const selectLabel=make('label','Retiro que vas a devolver'),select=make('select');select.id='returnWithdrawalSelect';selectLabel.htmlFor=select.id;
+  const note=make('p','Se registrará el mismo monto en la meta del retiro. Esta devolución es independiente de tu ahorro diario.');
+  const status=make('p');status.id='returnWithdrawalStatus';status.setAttribute('role','status');detail.append(selectLabel,select,note,status);box.append(label,detail);type.closest('.field').after(box);
+  const style=make('style');style.textContent='.saving-return-option{padding:14px;margin:12px 0 20px;border:1px solid #d7c6ee;border-radius:15px;background:#f5efff}.saving-return-option>label{display:flex;align-items:center;gap:10px;margin:0;cursor:pointer}.saving-return-option input[type=checkbox]{width:20px;height:20px;accent-color:#7053b9;flex-shrink:0}.saving-return-option [hidden]{display:none!important}.saving-return-option select{width:100%;min-height:44px;margin-top:6px}.saving-return-option p{font-size:13px;line-height:1.5;color:#756582}.saving-return-option #returnWithdrawalDetail{margin-top:14px}';document.head.append(style);
+  const baseUpdate=updateSpecialControls;
+  let signature='',busy=false,savedFields=null,lastProfile=selectedDepositProfile();
+  const cents=n=>Math.round(Number(n)*100);
+  function available(){return (state.withdrawals||[]).filter(w=>w.id&&depositProfile(w)===selectedDepositProfile()&&state.goals.some(g=>g.id===w.goalId)&&cents(w.amount)>0&&!state.entries.some(e=>e.withdrawalReturnId===w.id));}
+  function selected(){return available().find(w=>w.id===select.value);}
+  function configure(){
+    const w=selected();amount.readOnly=true;amount.min='0.01';amount.max='100000000';amount.value=w?String(cents(w.amount)/100):'';
+    if(w){if(![...goal.options].some(option=>option.value===w.goalId))renderGoalSelect();goal.value=w.goalId;}
+    el('depositAmountHint').textContent=w?'Devolución completa: '+soles(Number(w.amount))+'. No reemplaza tu aporte diario.':'No tienes retiros pendientes para devolver con este perfil.';
+  }
+  updateSpecialControls=function(){baseUpdate();if(toggle.checked)configure();};
+  function mode(){
+    const on=toggle.checked;detail.hidden=!on;type.closest('.field').hidden=on;select.required=on;type.disabled=on;goal.disabled=on;form.dataset.withdrawalReturn=String(on);
+    if(on){if(!savedFields)savedFields={amount:amount.value,goal:goal.value,type:type.value};configure();}
+    else{amount.readOnly=false;if(savedFields){amount.value=savedFields.amount;goal.value=savedFields.goal;type.value=savedFields.type;savedFields=null;}baseUpdate();}
+    form.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  function refresh(){
+    const profile=selectedDepositProfile();if(profile!==lastProfile){lastProfile=profile;toggle.checked=false;savedFields=null;mode();}
+    const list=available(),next=JSON.stringify([selectedDepositProfile(),state.goals.map(g=>[g.id,g.name]),list.map(w=>[w.id,w.amount,w.goalId,w.date,w.reason])]);if(next===signature)return;signature=next;
+    const chosen=select.value;select.replaceChildren();const blank=make('option',list.length?'Selecciona el retiro':'No hay retiros pendientes');blank.value='';select.append(blank);
+    for(const w of list){const g=state.goals.find(g=>g.id===w.goalId);const option=make('option',soles(Number(w.amount))+' · '+new Date(w.date).toLocaleDateString('es-PE',{timeZone:'America/Lima'})+' · '+g.name+(w.reason?' · '+w.reason:''));option.value=w.id;select.append(option);}
+    select.value=list.some(w=>w.id===chosen)?chosen:list.length===1?list[0].id:'';
+    if(toggle.checked)configure();
+  }
+  toggle.addEventListener('change',()=>{status.textContent='';mode();refresh();});select.addEventListener('change',()=>{status.textContent='';configure();form.dispatchEvent(new Event('input',{bubbles:true}));});
+  window.addEventListener('alcancia-state-loaded',refresh);window.addEventListener('alcancia-payment-saved',refresh);
+  setInterval(refresh,1000);
+  form.addEventListener('submit',event=>{
+    if(!toggle.checked)return;
+    event.preventDefault();event.stopImmediatePropagation();if(busy)return;
+    if(!window.loveGateUnlocked){status.textContent='Ingresa con tu perfil antes de guardar.';return;}
+    const w=selected();if(!w){refresh();status.textContent='Selecciona un retiro pendiente. Si ya fue devuelto, no se registrará otra vez.';return;}
+    const method=el('depositMethod').value;if(!['yape','transferencia','efectivo'].includes(method)){status.textContent='Selecciona Yape, transferencia o efectivo.';return;}
+    if(cents(amount.value)!==cents(w.amount)){configure();status.textContent='El monto debe coincidir con el retiro seleccionado.';return;}
+    const profile=selectedDepositProfile(),person=profile==='boo'?settings.person2:settings.person1;
+    const payment={id:'return-'+w.id,withdrawalReturnId:w.id,depositType:'withdrawal-return',recoveryFor:null,specialPeriod:null,goalId:w.goalId,profileId:profile,person,amount:cents(w.amount)/100,depositMethod:method,message:'Devolución de retiro'+(el('message').value.trim()?' · '+el('message').value.trim():''),date:new Date().toISOString()};
+    const previous=state.entries,previousGoal=state.activeGoalId;busy=true;
+    state.entries=[...previous,payment];state.activeGoalId=w.goalId;syncActiveGoal();
+    try{persist();}catch{state.entries=previous;state.activeGoalId=previousGoal;syncActiveGoal();busy=false;status.textContent='No se pudo guardar. El retiro sigue pendiente de devolución.';return;}
+    try{localStorage.removeItem('alcancia_saving_draft_v1:'+profile);}catch{}
+    toggle.checked=false;savedFields=null;mode();amount.value='';el('message').value='';el('depositMethod').value='';
+    settings.showHistory=true;try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{}
+    applySettings();render();if(typeof renderAdminRecords==='function')renderAdminRecords();closeMobileSaving();
+    showSaveCelebration(payment.amount,person,payment.message);window.dispatchEvent(new Event('alcancia-payment-saved'));notify('↩️ Devolución registrada: '+soles(payment.amount));refresh();
+    const button=document.querySelector('button[type=submit][form=form]')||form.querySelector('button[type=submit]');if(button)button.disabled=true;
+    setTimeout(()=>{busy=false;if(button)button.disabled=false;},1200);
+  },true);
+  refresh();mode();
+})();
+
