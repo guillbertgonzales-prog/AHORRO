@@ -65,7 +65,7 @@
       const manual=reason==='manual';
       if(busy||conflict&&!manual||!options.visible()||options.online?.()===false)return;
       if(!manual&&clock.now()<cooldown)return;
-      if(reason==='focus'&&lastCheck&&clock.now()-lastCheck<300000&&!pending)return;
+      if(reason==='focus'&&lastCheck&&clock.now()-lastCheck<5000&&!pending)return;
       busy=true;status('connecting','Comprobando los ahorros…');
       try{
         const remote=await request('GET');if(!valid(remote))throw Error('INVALID_STATE');latestRemote=clone(remote);lastCheck=clock.now();
@@ -106,7 +106,7 @@
       try{const remote=await request('GET');if(!valid(remote))throw Error('INVALID_STATE');preserve(options.getState(),remote);options.applyState(clone(remote));base=clone(remote);pending=false;metadata=false;conflict=null;lastLocal=business(remote);lastCheck=clock.now();journal();status('connected','Se recuperó la copia de la nube. Se conservó una copia local anterior.');options.onReady?.();return true;}
       catch{status('error','No se pudo recuperar la nube. No se cambiaron tus datos.');return false;}finally{busy=false;}
     }
-    function start(){if(started)return;started=true;clock.setInterval(()=>sync('auto'),300000);clock.setTimeout(()=>sync('initial'),0);}
+    function start(){if(started)return;started=true;const hint=window.document?.querySelector('.sync-saving-tools small');if(hint)hint.textContent='Las consultas automáticas se realizan cada 5 segundos mientras usas la página. Los cambios se guardan primero en este navegador.';clock.setInterval(()=>sync('auto'),5000);clock.setTimeout(()=>sync('initial'),0);}
     return {changed,sync,recoverCloud,start,inspect:()=>({pending,metadata,busy,conflict:!!conflict,lastCheck})};
   };
 })();
