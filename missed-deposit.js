@@ -12,7 +12,7 @@ function missedDepositDay(profile, now = new Date()) {
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   const day = savingsPeruDay(yesterday);
   if (state.savingWaivers?.[profile+':'+day]) return null;
-  const entries = state.entries.filter(item => depositProfile(item) === profile);
+  const entries = state.entries.filter(item => depositProfile(item) === profile && !item.withdrawalReturnId);
   // No se considera un olvido antes de que esa persona empezara a ahorrar.
   if (!entries.some(item => savingsPeruDay(item.date) && savingsPeruDay(item.date) < day)) return null;
   if (entries.some(item => savingsPeruDay(item.date) === day || item.recoveryFor === day)) return null;
@@ -50,3 +50,4 @@ function dailyDepositLimits(profile) {
   }, 1000);
   updateSpecialControls();
 })();
+
