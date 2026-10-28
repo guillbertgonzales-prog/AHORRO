@@ -60,7 +60,7 @@
   const make=(tag,text)=>{const node=document.createElement(tag);if(text)node.textContent=text;return node;};
   const box=make('section');box.className='saving-return-option';
   const label=make('label'),toggle=make('input');toggle.type='checkbox';toggle.id='returnWithdrawalToggle';
-  label.htmlFor=toggle.id;label.append(toggle,make('span','↩️ Devolver un retiro'));
+  label.htmlFor=toggle.id;label.append(toggle,make('span','Devolver un retiro'));
   const detail=make('div');detail.id='returnWithdrawalDetail';detail.hidden=true;toggle.setAttribute('aria-controls',detail.id);
   const selectLabel=make('label','Retiro que vas a devolver'),select=make('select');select.id='returnWithdrawalSelect';selectLabel.htmlFor=select.id;
   const note=make('p','Se registrará el mismo monto en la meta del retiro. Esta devolución es independiente de tu ahorro diario.');
