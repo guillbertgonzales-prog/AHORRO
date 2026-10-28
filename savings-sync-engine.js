@@ -33,7 +33,12 @@
   window.SavingsSyncTools={merge,equal,business};
   window.createSavingsSync=function(options){
     const storage=options.storage||localStorage,request=options.request;
-    const clock=options.clock||{now:()=>Date.now(),setTimeout,clearTimeout,setInterval};
+    const clock=options.clock||{
+      now:()=>Date.now(),
+      setTimeout:(...args)=>window.setTimeout(...args),
+      clearTimeout:(...args)=>window.clearTimeout(...args),
+      setInterval:(...args)=>window.setInterval(...args)
+    };
     const journalKey='alcancia_sync_queue_v3:'+options.bin;
     let base=null,pending=false,metadata=false,busy=false,conflict=null,failed=0,cooldown=0,lastCheck=0,timer=null,started=false,latestRemote=null;
     const starting=clone(options.getState());let lastLocal=business(starting);
